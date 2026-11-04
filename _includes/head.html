@@ -1,0 +1,32 @@
+{%- assign page_title = page.title -%}
+{%- assign page_desc = page.description -%}
+{%- if page.layout == "category" -%}
+  {%- assign head_cat_id = page.dir | remove: "/" -%}
+  {%- assign head_cat = site.data.categories | where: "id", head_cat_id | first -%}
+  {%- assign page_title = head_cat.title -%}
+  {%- assign page_desc = head_cat.description -%}
+{%- endif -%}
+{%- if page.url == "/" or page_title == nil or page_title == site.title -%}
+  {%- assign full_title = site.title -%}
+{%- else -%}
+  {%- assign full_title = page_title | append: " | " | append: site.title -%}
+{%- endif -%}
+{%- assign meta_desc = page_desc | default: site.description | markdownify | strip_html | normalize_whitespace -%}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ full_title | escape }}</title>
+<meta name="description" content="{{ meta_desc | escape }}">
+<link rel="canonical" href="{{ page.url | absolute_url }}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ site.title | escape }}">
+<meta property="og:title" content="{{ full_title | escape }}">
+<meta property="og:description" content="{{ meta_desc | escape }}">
+<meta property="og:url" content="{{ page.url | absolute_url }}">
+<meta name="theme-color" content="#DAD7CD">
+<meta name="color-scheme" content="light">
+<link rel="icon" type="image/png" sizes="32x32" href="{{ '/assets/img/favicon-32.png' | relative_url }}">
+<link rel="apple-touch-icon" href="{{ '/assets/img/apple-touch-icon.png' | relative_url }}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="{{ '/assets/css/docs.css' | relative_url }}?v={{ site.time | date: '%s' }}">

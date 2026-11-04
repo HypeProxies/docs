@@ -1,23 +1,9 @@
-# Connecting to Your Mac mini
-
-_Last updated: 2026-11-04_
-
-You can reach your Mac mini over the internet with SSH (terminal and file transfer) or with Screen Sharing / Apple Remote Desktop (full desktop), using the address, username and password from your client area.
-
-**Contents**
-
-- [Your login details](#your-login-details)
-- [SSH (terminal)](#ssh-terminal)
-  - [Log in with an SSH key (recommended)](#log-in-with-an-ssh-key-recommended)
-  - [Turn off password login for SSH (recommended)](#turn-off-password-login-for-ssh-recommended)
-- [File transfer](#file-transfer)
-- [Screen Sharing from a Mac](#screen-sharing-from-a-mac)
-- [Apple Remote Desktop](#apple-remote-desktop)
-- [Remote desktop from Windows or Linux](#remote-desktop-from-windows-or-linux)
-- [Optional: Screen Sharing through SSH](#optional-screen-sharing-through-ssh)
-- [KVM console (free)](#kvm-console-free)
-- [Good to know](#good-to-know)
-- [Troubleshooting](#troubleshooting)
+---
+title: Connecting to your Mac mini
+description: Reach your Mac mini over the internet with SSH (terminal and file transfer) or with Screen Sharing / Apple Remote Desktop (full desktop), using the address, username and password from your client area.
+order: 1
+last_updated: 2026-11-04
+---
 
 ## Your login details
 

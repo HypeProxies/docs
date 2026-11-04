@@ -1,0 +1,31 @@
+{%- comment -%}
+  Usage: {% include breadcrumb.html cat=cat title=page.title %}
+  cat (optional): the category from _data/categories.yml; title (optional): the current page.
+{%- endcomment -%}
+<div class="crumb-bar">
+  <button class="nav-toggle" type="button" data-nav-toggle aria-controls="sidebar" aria-expanded="false">
+    {% include icon.html name="menu" %}<span class="sr-only">Show all guides</span>
+  </button>
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <ol>
+      {%- if include.cat or include.title %}
+      <li><a href="{{ '/' | relative_url }}">Docs</a></li>
+      {%- else %}
+      <li><span aria-current="page">Docs</span></li>
+      {%- endif %}
+      {%- if include.cat %}
+      <li>
+        {% include icon.html name="chevron-right" %}
+        {%- if include.title %}
+        <a href="{{ '/' | append: include.cat.id | append: '/' | relative_url }}">{{ include.cat.title }}</a>
+        {%- else %}
+        <span aria-current="page">{{ include.cat.title }}</span>
+        {%- endif %}
+      </li>
+      {%- endif %}
+      {%- if include.title %}
+      <li>{% include icon.html name="chevron-right" %}<span aria-current="page">{{ include.title }}</span></li>
+      {%- endif %}
+    </ol>
+  </nav>
+</div>

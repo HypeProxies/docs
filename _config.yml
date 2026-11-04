@@ -1,0 +1,47 @@
+title: HypeProxies Docs
+description: Guides for HypeProxies customers. How to connect to your services, use them and fix common problems.
+url: https://docs.hypeproxies.com
+lang: en
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter: rouge
+
+# GitHub Pages turns these on by default; listed here so a local build behaves the same.
+plugins:
+  - jekyll-optional-front-matter
+  - jekyll-readme-index
+  - jekyll-relative-links
+  - jekyll-default-layout
+  - jekyll-titles-from-headings
+  - jekyll-sitemap
+
+# Every Markdown page is a guide unless its front matter says otherwise.
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: page
+
+# Repo-only files: not published on the site.
+exclude:
+  - README.md
+  - CONTRIBUTING.md
+  - templates/
+  - Gemfile
+  - Gemfile.lock
+  - vendor/
+  - node_modules/
+
+links:
+  website: https://hypeproxies.com
+  help_center: https://hypeproxies.com/help-center
+  login: https://dash.hypeproxies.com/index.php?rp=/login
+  ticket: https://dash.hypeproxies.com/submitticket.php
+  discord: https://discord.gg/DfjCzna
+  contact: https://hypeproxies.com/contact
+  terms: https://hypeproxies.com/terms-of-service
+  privacy: https://hypeproxies.com/privacy-policy
+  acceptable_use: https://hypeproxies.com/acceptable-use-policy

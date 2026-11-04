@@ -1,0 +1,17 @@
+---
+layout: null
+permalink: /search.json
+sitemap: false
+---
+{%- assign first = true -%}
+[
+{%- for cat in site.data.categories -%}
+  {%- assign cat_dir = "/" | append: cat.id | append: "/" -%}
+  {%- assign guides = site.pages | where: "dir", cat_dir | where_exp: "p", "p.name != 'index.md'" | sort: "order", "last" -%}
+  {%- for p in guides -%}
+    {%- unless first -%},{%- endunless -%}
+    {%- assign first = false %}
+  {"title": {{ p.title | jsonify }}, "category": {{ cat.title | jsonify }}, "url": {{ p.url | relative_url | jsonify }}, "description": {{ p.description | markdownify | strip_html | normalize_whitespace | strip | jsonify }}, "content": {{ p.content | markdownify | strip_html | normalize_whitespace | jsonify }}}
+  {%- endfor -%}
+{%- endfor %}
+]

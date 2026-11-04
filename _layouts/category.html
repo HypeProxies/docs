@@ -1,0 +1,50 @@
+---
+layout: default
+---
+{%- comment -%}
+  A service page: <folder>/index.md with `layout: category`.
+  Title and description come from _data/categories.yml; the guide list is built from the folder.
+{%- endcomment -%}
+{%- assign cat_id = page.dir | remove: "/" -%}
+{%- assign cat = site.data.categories | where: "id", cat_id | first -%}
+{%- assign guides = site.pages | where: "dir", page.dir | where_exp: "p", "p.name != 'index.md'" | sort: "order", "last" -%}
+<div class="page-wide">
+  {% include breadcrumb.html cat=cat %}
+
+  <header class="page-head page-head-category">
+    <span class="cat-icon">{% include icon.html name=cat.icon %}</span>
+    <div>
+      <h1>{{ cat.title | default: page.title }}</h1>
+      {%- if cat.description %}
+      <p class="lead">{{ cat.description }}</p>
+      {%- endif %}
+    </div>
+  </header>
+
+  <hr class="rule">
+
+  {%- assign extra = content | strip -%}
+  {%- if extra != "" %}
+  <div class="prose">{{ content }}</div>
+  {%- endif %}
+
+  {%- if guides.size > 0 %}
+  <h2 class="section-title">Guides</h2>
+  <ul class="card-list">
+    {%- for g in guides %}
+    {% include guide-card.html guide=g %}
+    {%- endfor %}
+  </ul>
+  {% include help-card.html title="Can't find what you need?" %}
+  {%- else %}
+  <div class="empty-state">
+    <span class="chip">Coming soon</span>
+    <h2>Guides for {{ cat.title }} are on the way</h2>
+    <p>Until they are published, our support team can help you set up and use this service.</p>
+    <div class="empty-actions">
+      <a class="btn btn-primary" href="{{ site.links.ticket }}">Open a ticket</a>
+      <a class="btn btn-outline" href="{{ site.links.help_center }}">Visit the Help Center</a>
+    </div>
+  </div>
+  {%- endif %}
+</div>

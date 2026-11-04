@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="{{ site.lang | default: 'en' }}">
+<head>
+{% include head.html %}
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+{% include header.html %}
+<div class="container shell">
+  <aside class="sidebar" id="sidebar" aria-label="All guides">
+    {% include sidebar.html %}
+  </aside>
+  <main class="main" id="main" tabindex="-1">
+    {{ content }}
+  </main>
+</div>
+<div class="nav-backdrop" data-nav-close hidden></div>
+{% include footer.html %}
+<script src="{{ '/assets/js/docs.js' | relative_url }}?v={{ site.time | date: '%s' }}" defer></script>
+</body>
+</html>

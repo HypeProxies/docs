@@ -1,8 +1,9 @@
-# <Guide title: what the customer wants to do>
-
-_Last updated: YYYY-MM-DD_
-
-<One or two sentences: what this guide helps with and what the customer needs before starting (for example, the login details from the client area).>
+---
+title: <What the customer wants to do, for example "Connecting to your VPS">
+description: <One or two sentences: what this guide helps with and what the customer needs before starting. Shown under the title and on the cards.>
+order: 10
+last_updated: YYYY-MM-DD
+---
 
 ## <First task>
 
@@ -15,9 +16,14 @@ _Last updated: YYYY-MM-DD_
 
 3. <What the customer should see when it worked.>
 
+> **Note:** <Optional tip. A line starting with `>` becomes a green note box.>
+
 ## <Second task>
 
 <Short explanation, then steps.>
+
+> **Warning:** <Optional. Something that can lock the customer out or lose data.>
+{: .warning}
 
 ## Troubleshooting
 

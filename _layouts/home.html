@@ -1,0 +1,45 @@
+---
+layout: default
+---
+<div class="page-wide">
+  {% include breadcrumb.html %}
+
+  <header class="hero">
+    <h1>{{ page.title | default: site.title }}</h1>
+    <p class="lead">{{ page.description | default: site.description }}</p>
+  </header>
+
+  <hr class="rule">
+
+  {{ content }}
+
+  <h2 class="section-title">Browse by service</h2>
+  <div class="cat-grid">
+    {%- for cat in site.data.categories %}
+      {%- assign cat_dir = "/" | append: cat.id | append: "/" -%}
+      {%- assign guides = site.pages | where: "dir", cat_dir | where_exp: "p", "p.name != 'index.md'" | sort: "order", "last" %}
+    <section class="cat-card{% if guides.size == 0 %} is-soon{% endif %}">
+      <div class="cat-card-head">
+        <span class="cat-icon">{% include icon.html name=cat.icon %}</span>
+        {%- if guides.size == 0 %}<span class="chip">Coming soon</span>{% endif %}
+      </div>
+      <h3><a class="cat-card-link" href="{{ cat_dir | relative_url }}">{{ cat.title }}</a></h3>
+      <p>{{ cat.description }}</p>
+      {%- if guides.size > 0 %}
+      <ul class="cat-card-guides">
+        {%- for g in guides limit: 4 %}
+        <li><a href="{{ g.url | relative_url }}">{{ g.title }}</a></li>
+        {%- endfor %}
+      </ul>
+      {%- if guides.size > 4 %}
+      <a class="cat-card-more" href="{{ cat_dir | relative_url }}">All {{ guides.size }} guides {% include icon.html name="arrow-right" %}</a>
+      {%- endif %}
+      {%- else %}
+      <p class="cat-card-soon">Guides for this service are on the way.</p>
+      {%- endif %}
+    </section>
+    {%- endfor %}
+  </div>
+
+  {% include help-card.html title="Can't find what you need?" %}
+</div>

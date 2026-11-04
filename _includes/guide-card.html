@@ -1,0 +1,12 @@
+{%- comment -%} Usage: {% include guide-card.html guide=g %} {%- endcomment -%}
+<li>
+  <a class="card-link" href="{{ include.guide.url | relative_url }}">
+    <span class="card-link-text">
+      <span class="card-link-title">{{ include.guide.title }}</span>
+      {%- if include.guide.description %}
+      <span class="card-link-desc">{{ include.guide.description | markdownify | strip_html | strip }}</span>
+      {%- endif %}
+    </span>
+    {% include icon.html name="chevron-right" %}
+  </a>
+</li>

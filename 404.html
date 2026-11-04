@@ -1,0 +1,17 @@
+---
+layout: default
+title: Page not found
+permalink: /404.html
+sitemap: false
+---
+<div class="not-found">
+  {% include breadcrumb.html %}
+  <header class="page-head">
+    <h1>Page not found</h1>
+    <p class="lead">This page does not exist or has moved. Pick a guide from the menu or search for it.</p>
+  </header>
+  <div class="empty-actions">
+    <a class="btn btn-primary" href="{{ '/' | relative_url }}">All guides</a>
+    <a class="btn btn-outline" href="{{ site.links.ticket }}">Open a ticket</a>
+  </div>
+</div>
