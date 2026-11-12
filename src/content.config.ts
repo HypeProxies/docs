@@ -8,7 +8,7 @@ const services = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string(),
-    icon: z.enum(['mac', 'server', 'cloud', 'globe', 'doc']),
+    icon: z.enum(['mac', 'server', 'cloud', 'globe']),
     order: z.number(),
   }),
 });

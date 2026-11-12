@@ -31,16 +31,13 @@ import Sun from '@lucide/astro/icons/sun';
 <script>
   import { currentTheme, setTheme } from '../scripts/theme';
 
-  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]')) {
-    const label = () => {
-      const text = `Switch to ${currentTheme() === 'dark' ? 'light' : 'dark'} mode`;
-      button.setAttribute('aria-label', text);
-      button.title = text;
-    };
-    label();
-    button.addEventListener('click', () => {
-      setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
-    });
-    document.addEventListener('themechange', label);
-  }
+  const button = document.querySelector<HTMLButtonElement>('[data-theme-toggle]')!;
+  const label = () => {
+    const text = `Switch to ${currentTheme() === 'dark' ? 'light' : 'dark'} mode`;
+    button.setAttribute('aria-label', text);
+    button.title = text;
+  };
+  label();
+  button.addEventListener('click', () => setTheme(currentTheme() === 'dark' ? 'light' : 'dark'));
+  document.addEventListener('themechange', label);
 </script>

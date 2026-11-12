@@ -3,7 +3,7 @@
 #   id:          folder name of the service in guides/ (lowercase-with-hyphens); its page is /<id>/
 #   title:       name shown to customers
 #   description: one sentence, shown on the home page and the service page
-#   icon:        mac | server | cloud | globe | doc
+#   icon:        mac | server | cloud | globe
 #   order:       position on the site, lowest first
 #
 # Guides are picked up automatically from guides/<id>/. A service with no guides yet is shown as
