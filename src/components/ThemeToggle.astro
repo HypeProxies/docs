@@ -1,0 +1,43 @@
+---
+import Moon from '@lucide/astro/icons/moon';
+import Sun from '@lucide/astro/icons/sun';
+---
+
+<button type="button" class="icon-btn theme-toggle" data-theme-toggle aria-label="Switch theme" title="Switch theme">
+  <Moon size={16} class="show-in-light" aria-hidden="true" />
+  <Sun size={16} class="show-in-dark" aria-hidden="true" />
+</button>
+
+<style>
+  .show-in-dark {
+    display: none;
+  }
+  :global(html[data-theme='dark']) .show-in-dark {
+    display: block;
+  }
+  :global(html[data-theme='dark']) .show-in-light {
+    display: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :global(html:not([data-theme='light'])) .show-in-dark {
+      display: block;
+    }
+    :global(html:not([data-theme='light'])) .show-in-light {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import { currentTheme, setTheme } from '../scripts/theme';
+
+  const button = document.querySelector<HTMLButtonElement>('[data-theme-toggle]')!;
+  const label = () => {
+    const text = `Switch to ${currentTheme() === 'dark' ? 'light' : 'dark'} mode`;
+    button.setAttribute('aria-label', text);
+    button.title = text;
+  };
+  label();
+  button.addEventListener('click', () => setTheme(currentTheme() === 'dark' ? 'light' : 'dark'));
+  document.addEventListener('themechange', label);
+</script>

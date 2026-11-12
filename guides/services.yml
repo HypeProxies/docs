@@ -1,0 +1,34 @@
+# Services shown in the menu, on the home page and in search.
+#
+#   id:          folder name of the service in guides/ (lowercase-with-hyphens); its page is /<id>/
+#   title:       name shown to customers
+#   description: one sentence, shown on the home page and the service page
+#   icon:        mac | server | cloud | globe
+#   order:       position on the site, lowest first
+#
+# Guides are picked up automatically from guides/<id>/. A service with no guides yet is shown as
+# "Coming soon".
+
+- id: mac-mini
+  title: Mac mini (dedicated)
+  description: A physical Apple silicon Mac mini in our datacenter, used only by you, with remote access over SSH, Screen Sharing and a browser KVM console.
+  icon: mac
+  order: 1
+
+- id: bare-metal
+  title: Bare metal servers
+  description: Dedicated physical servers, used only by you.
+  icon: server
+  order: 2
+
+- id: vps
+  title: VPS
+  description: Virtual private servers.
+  icon: cloud
+  order: 3
+
+- id: proxy
+  title: Proxy servers
+  description: Dedicated ISP and residential proxies.
+  icon: globe
+  order: 4

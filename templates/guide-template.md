@@ -1,6 +1,6 @@
 ---
 title: <What the customer wants to do, for example "Connecting to your VPS">
-description: <One or two sentences: what this guide helps with and what the customer needs before starting. Shown under the title and on the cards.>
+description: <One or two sentences of plain text (no Markdown): what this guide helps with and what the customer needs before starting. Shown under the title, on the cards and in search.>
 order: 10
 last_updated: YYYY-MM-DD
 ---
@@ -16,14 +16,13 @@ last_updated: YYYY-MM-DD
 
 3. <What the customer should see when it worked.>
 
-> **Note:** <Optional tip. A line starting with `>` becomes a green note box.>
+> **Note:** <Optional tip. A paragraph starting with `> **Note:**` becomes a note box.>
 
 ## <Second task>
 
 <Short explanation, then steps.>
 
-> **Warning:** <Optional. Something that can lock the customer out or lose data.>
-{: .warning}
+> **Warning:** <Optional. Something that can lock the customer out or lose data. A paragraph starting with `> **Warning:**` becomes a warning box.>
 
 ## Troubleshooting
 

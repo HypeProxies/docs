@@ -1,0 +1,82 @@
+---
+import '@fontsource/inter/latin-400.css';
+import '@fontsource/inter/latin-500.css';
+import '@fontsource/inter/latin-600.css';
+import '@fontsource/inter/latin-700.css';
+import '@fontsource/jetbrains-mono/latin-400.css';
+import '../styles/global.css';
+import type { Crumb } from '../components/Breadcrumb.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Sidebar from '../components/Sidebar.astro';
+import { servicesWithGuides, SITE_DESCRIPTION, SITE_TITLE } from '../lib/site';
+import { THEME_KEY } from '../scripts/theme-key';
+
+interface Props {
+  /** Page title; the site name is added after it. Leave empty on the home page. */
+  title?: string;
+  description?: string;
+  crumbs: Crumb[];
+  /** Pages that bring their own layout inside the content area (the API reference). */
+  fullWidth?: boolean;
+}
+
+const { title, description = SITE_DESCRIPTION, crumbs, fullWidth = false } = Astro.props;
+const fullTitle = title ? `${title} | ${SITE_TITLE}` : SITE_TITLE;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const services = await servicesWithGuides();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_TITLE} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" />
+    <script is:inline define:vars={{ THEME_KEY }}>
+      try {
+        const theme = localStorage.getItem(THEME_KEY);
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+      } catch {
+        // Storage blocked: follow the system setting.
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Sidebar services={services} currentPath={Astro.url.pathname} />
+    <div class="nav-backdrop" data-nav-close hidden></div>
+    <div class="flex min-h-screen min-w-0 flex-col lg:pl-(--sidebar-w)">
+      <Header crumbs={crumbs}><slot name="icon" slot="icon" /></Header>
+      <main id="main" tabindex="-1" class:list={['flex-1 outline-none', !fullWidth && 'px-16 pt-40 pb-64 sm:px-32 lg:pt-56']}>
+        {fullWidth ? <slot /> : <div class="mx-auto w-full max-w-[1120px]"><slot /></div>}
+      </main>
+      <Footer />
+    </div>
+  </body>
+</html>
+
+<style>
+  .nav-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 35;
+    background: var(--c6-canvas);
+    opacity: 0.6;
+  }
+</style>
+
+<script>
+  import '../scripts/nav';
+  import '../scripts/search';
+</script>

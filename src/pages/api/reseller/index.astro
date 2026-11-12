@@ -1,0 +1,50 @@
+---
+import ArrowUpRight from '@lucide/astro/icons/arrow-up-right';
+import Braces from '@lucide/astro/icons/braces';
+import ResellerReference from '../../../components/ResellerReference';
+import Base from '../../../layouts/Base.astro';
+import { resellerSpec } from '../../../lib/reseller-spec';
+import { links } from '../../../lib/site';
+
+const { info } = resellerSpec;
+---
+
+<Base
+  title="Reseller API"
+  description={info.summary ?? 'Reference for the HypeProxies reseller API.'}
+  crumbs={[{ label: 'Docs', href: '/' }, { label: 'Reseller API' }]}
+  fullWidth
+>
+  <Braces slot="icon" size={16} stroke-width={1.75} aria-hidden="true" />
+
+  <div class="border-b border-stroke bg-tray px-16 py-14 sm:px-32">
+    <div class="flex flex-wrap items-center justify-between gap-12">
+      <p class="text-base text-text-2">
+        Version {info.version}. Authenticate with an API key from the new dashboard. The spec is also available as{' '}
+        <a class="text-link" href="/api/reseller/openapi.json">OpenAPI JSON</a>.
+      </p>
+      <div class="flex gap-8">
+        <a class="btn btn-secondary" href={links.apiKeys}>API keys <ArrowUpRight size={14} aria-hidden="true" /></a>
+        <a class="btn btn-primary" href={links.resellerDashboard}>
+          Reseller dashboard <ArrowUpRight size={14} aria-hidden="true" />
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="reference">
+    <ResellerReference client:only="react" />
+    <noscript>
+      <p class="px-16 py-40 text-md text-text-2 sm:px-32">
+        The API reference needs JavaScript. Download the <a class="text-link" href="/api/reseller/openapi.json">OpenAPI JSON</a>{' '}
+        to read it in another tool.
+      </p>
+    </noscript>
+  </div>
+</Base>
+
+<style>
+  .reference {
+    min-height: calc(100vh - var(--header-h));
+  }
+</style>

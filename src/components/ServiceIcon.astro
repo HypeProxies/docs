@@ -1,0 +1,18 @@
+---
+import Cloud from '@lucide/astro/icons/cloud';
+import Globe from '@lucide/astro/icons/globe';
+import HardDrive from '@lucide/astro/icons/hard-drive';
+import Server from '@lucide/astro/icons/server';
+import type { Service } from '../lib/site';
+
+interface Props {
+  icon: Service['data']['icon'];
+  size?: number;
+}
+
+const icons = { mac: HardDrive, server: Server, cloud: Cloud, globe: Globe };
+const { icon, size = 16 } = Astro.props;
+const Icon = icons[icon];
+---
+
+<Icon size={size} stroke-width={1.75} aria-hidden="true" />
