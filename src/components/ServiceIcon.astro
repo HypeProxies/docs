@@ -1,4 +1,5 @@
 ---
+import Activity from '@lucide/astro/icons/activity';
 import Cloud from '@lucide/astro/icons/cloud';
 import Globe from '@lucide/astro/icons/globe';
 import HardDrive from '@lucide/astro/icons/hard-drive';
@@ -10,7 +11,7 @@ interface Props {
   size?: number;
 }
 
-const icons = { mac: HardDrive, server: Server, cloud: Cloud, globe: Globe };
+const icons = { mac: HardDrive, server: Server, cloud: Cloud, globe: Globe, activity: Activity };
 const { icon, size = 16 } = Astro.props;
 const Icon = icons[icon];
 ---
