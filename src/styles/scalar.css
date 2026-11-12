@@ -107,3 +107,13 @@ html :is(.light-mode, .dark-mode) .scalar-app :focus-visible {
 html .scalar-app :not(pre) > code {
   overflow-wrap: anywhere;
 }
+
+/* Code stays monochrome like the guides' code: the state colors above are not for syntax. */
+html .scalar-app :is(pre, code) {
+  --scalar-color-green: var(--c6-text-2);
+  --scalar-color-red: var(--c6-text-1);
+  --scalar-color-orange: var(--c6-text-1);
+  --scalar-color-yellow: var(--c6-text-1);
+  --scalar-color-blue: var(--c6-text-1);
+  --scalar-color-purple: var(--c6-text-1);
+}

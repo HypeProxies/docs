@@ -1,6 +1,6 @@
 # Adding and editing docs
 
-[docs.hypeproxies.com](https://docs.hypeproxies.com) is built from the `main` branch by a GitHub Actions workflow (`.github/workflows/deploy.yml`): a push to `main` is live in about two minutes. The design (menu, search, "On this page", theme switch, footer) comes from the site, so you only write Markdown.
+[docs.hypeproxies.com](https://docs.hypeproxies.com) is built from the `main` branch by a GitHub Actions workflow (`.github/workflows/deploy.yml`): a push to `main` is live in about three minutes (the build and its checks take about a minute and a half, then the deploy). The design (menu, search, "On this page", theme switch, footer) comes from the site, so you only write Markdown.
 
 ## Where things are
 
