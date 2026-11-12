@@ -1,0 +1,4471 @@
+{
+  "components": {
+    "schemas": {
+      "ApplyReseller": {
+        "description": "A reseller application.",
+        "properties": {
+          "company_name": {
+            "description": "Business name the reseller sells under.",
+            "type": "string"
+          },
+          "expected_subnets": {
+            "description": "How many /24s the reseller expects to need.",
+            "format": "int32",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "sales_channel": {
+            "description": "How the reseller sells to its customers.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "website": {
+            "description": "The reseller's website, starting with `http://` or `https://`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "company_name"
+        ],
+        "type": "object"
+      },
+      "CarrierStock": {
+        "description": "Free stock of one carrier.",
+        "properties": {
+          "carrier": {
+            "description": "Carrier name, lower case.",
+            "type": "string"
+          },
+          "plan_ips_available": {
+            "$ref": "#/components/schemas/PlanIps",
+            "description": "Shared IPs left for plans, per use case."
+          },
+          "sites": {
+            "description": "Stock at each of the carrier's sites; an order may name one of them.",
+            "items": {
+              "$ref": "#/components/schemas/SiteStock"
+            },
+            "type": "array"
+          },
+          "subnets_available": {
+            "description": "Whole /24s that can still be sold.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "carrier",
+          "subnets_available",
+          "plan_ips_available",
+          "sites"
+        ],
+        "type": "object"
+      },
+      "ChecklistStep": {
+        "description": "One get-started step and whether the workspace's own data shows it done.",
+        "properties": {
+          "done": {
+            "description": "Whether it is done.",
+            "type": "boolean"
+          },
+          "step": {
+            "$ref": "#/components/schemas/OnboardingStep",
+            "description": "The step."
+          }
+        },
+        "required": [
+          "step",
+          "done"
+        ],
+        "type": "object"
+      },
+      "CreatePack": {
+        "additionalProperties": false,
+        "description": "A pack for one customer. Send an `Idempotency-Key` header (a UUID) with it. Unknown fields\nare refused.",
+        "properties": {
+          "carrier": {
+            "description": "Carrier such as `verizon` or `att`; any carrier when left out.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ips": {
+            "description": "IPs the customer gets, 1 to 250. No other sub-user serves them.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "label": {
+            "description": "The reseller's name for the customer, 1 to 200 characters.",
+            "type": "string"
+          },
+          "max_total_cents": {
+            "description": "The most a plan bought for the pack may take from the wallet. When prices went up since\nthe reseller looked, the pack is refused instead of charged more.",
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "reference": {
+            "description": "The reseller's own reference for the customer, up to 200 characters.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "site": {
+            "description": "The site, by slug such as `ashburn-va`; any site when left out.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "use_case": {
+            "$ref": "#/components/schemas/UseCase",
+            "description": "What the IPs are used for."
+          },
+          "whitelists": {
+            "description": "Client IPv4 addresses that may use the proxies without a password.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "ips",
+          "label",
+          "use_case"
+        ],
+        "type": "object"
+      },
+      "CreateSubuser": {
+        "description": "A new sub-user. Give either `ips` or `ip_count`.",
+        "properties": {
+          "ip_count": {
+            "description": "How many of the service's IPs to serve, taking the ones fewest sub-users use.",
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "ips": {
+            "description": "IPs of the service to serve.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "label": {
+            "description": "The reseller's name for the customer, 1 to 200 characters.",
+            "type": "string"
+          },
+          "reference": {
+            "description": "The reseller's own reference for the customer, up to 200 characters.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "whitelists": {
+            "description": "Client IPv4 addresses that may use the proxies without a password.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "type": "object"
+      },
+      "DomainStat": {
+        "description": "A single domain with aggregated request and bandwidth totals.",
+        "properties": {
+          "bytes_in": {
+            "description": "Total bytes received from this domain.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "bytes_out": {
+            "description": "Total bytes sent to this domain.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "domain": {
+            "description": "The domain name.",
+            "type": "string"
+          },
+          "total_requests": {
+            "description": "Total requests to this domain.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "domain",
+          "total_requests"
+        ],
+        "type": "object"
+      },
+      "IdentityStart": {
+        "description": "Where to send the owner to verify their identity.",
+        "properties": {
+          "url": {
+            "description": "Stripe's hosted verification page. Single use and short-lived: open it right away.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
+      "IdentityStatus": {
+        "description": "Where a Stripe Identity verification stands, as Stripe names it.",
+        "enum": [
+          "requires_input",
+          "processing",
+          "verified",
+          "canceled"
+        ],
+        "type": "string"
+      },
+      "Inventory": {
+        "description": "What resellers can buy right now.",
+        "properties": {
+          "carriers": {
+            "description": "Stock per carrier.",
+            "items": {
+              "$ref": "#/components/schemas/CarrierStock"
+            },
+            "type": "array"
+          },
+          "plan_sizes": {
+            "description": "Pay-as-you-go plan sizes, in IPs.",
+            "items": {
+              "format": "int32",
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "plan_sizes",
+          "carriers"
+        ],
+        "type": "object"
+      },
+      "IpBandwidthSummary": {
+        "description": "Selected-period bandwidth for one assigned proxy IP.",
+        "properties": {
+          "bytes_in": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "bytes_out": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "proxy_ip": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "proxy_ip",
+          "bytes_in",
+          "bytes_out"
+        ],
+        "type": "object"
+      },
+      "IpReplacementHistoryEntry": {
+        "description": "Durable history entry for one IP replacement attempt.",
+        "properties": {
+          "actor_kind": {
+            "description": "Whether customer or admin initiated attempt.",
+            "type": "string"
+          },
+          "added_ips": {
+            "description": "Replacement IPs applied on success; empty after failure.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "completed_at": {
+            "description": "Completion timestamp used for cooldown calculations.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "failure_message": {
+            "description": "Clear failure summary when status is `failed`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "Replacement attempt ID.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "reason": {
+            "description": "Why replacement was requested.",
+            "type": "string"
+          },
+          "released_ips": {
+            "description": "IPs requested for removal.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "status": {
+            "description": "`succeeded` or `failed`.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "reason",
+          "released_ips",
+          "added_ips",
+          "status",
+          "actor_kind",
+          "completed_at"
+        ],
+        "type": "object"
+      },
+      "IpReplacementHistoryResponse": {
+        "description": "Replacement history plus server-authoritative cooldown state.",
+        "properties": {
+          "cooldown_remaining_seconds": {
+            "description": "Seconds until another successful replacement may be attempted.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "items": {
+            "description": "Most recent attempts, newest first.",
+            "items": {
+              "$ref": "#/components/schemas/IpReplacementHistoryEntry"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "cooldown_remaining_seconds",
+          "items"
+        ],
+        "type": "object"
+      },
+      "LabelResellerService": {
+        "description": "Name a reseller service for the customer it is delivered to. A field left out stays as it\nis; `null` or a blank one is cleared.",
+        "properties": {
+          "label": {
+            "description": "The reseller's name for the customer, up to 200 characters.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reference": {
+            "description": "The reseller's own reference for the customer, up to 200 characters.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "LabelSubuser": {
+        "description": "Rename a sub-user. A field left out stays as it is; `null` or a blank reference clears it.",
+        "properties": {
+          "label": {
+            "description": "The reseller's name for the customer, 1 to 200 characters.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reference": {
+            "description": "The reseller's own reference for the customer, up to 200 characters.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "NewWebhookEndpoint": {
+        "description": "A new endpoint.",
+        "properties": {
+          "description": {
+            "description": "A note, up to 200 characters.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "events": {
+            "description": "The event types to receive; every type when left out.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "url": {
+            "description": "The HTTPS URL to post events to. It must resolve to a public address.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
+      "OnboardingChecklist": {
+        "description": "The get-started checklist.",
+        "properties": {
+          "steps": {
+            "description": "Every step, in order.",
+            "items": {
+              "$ref": "#/components/schemas/ChecklistStep"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "steps"
+        ],
+        "type": "object"
+      },
+      "OnboardingStep": {
+        "description": "A get-started step, in the order a new reseller takes them.",
+        "enum": [
+          "wallet_funded",
+          "api_key_created",
+          "first_order",
+          "customer_set_up",
+          "webhook_added"
+        ],
+        "type": "string"
+      },
+      "PackStatus": {
+        "description": "Where a pack stands.",
+        "enum": [
+          "pending",
+          "ready",
+          "failed"
+        ],
+        "type": "string"
+      },
+      "PaginatedResponse_ResellerSubuser": {
+        "description": "A generic container for paginated API responses.",
+        "properties": {
+          "items": {
+            "description": "The items for the current page.",
+            "items": {
+              "description": "A proxy login for one of the reseller's customers.",
+              "properties": {
+                "created_at": {
+                  "description": "When it was created.",
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "effective_status": {
+                  "description": "Whether the proxies work: `active` only while the sub-user is active and its service is\nactive, `suspended` otherwise.",
+                  "type": "string"
+                },
+                "id": {
+                  "description": "The sub-user.",
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "label": {
+                  "description": "The reseller's name for the customer.",
+                  "type": "string"
+                },
+                "password": {
+                  "description": "The proxy password. Left out of lists; read one sub-user to get it.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "proxies": {
+                  "description": "The proxies, as IP and port; connect with the username and password.",
+                  "items": {
+                    "$ref": "#/components/schemas/SubuserProxy"
+                  },
+                  "type": "array"
+                },
+                "reference": {
+                  "description": "The reseller's own reference for the customer.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "service_id": {
+                  "description": "The reseller service whose IPs it serves.",
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "status": {
+                  "description": "`active`, or `suspended` when the reseller paused it.",
+                  "type": "string"
+                },
+                "sync_pending": {
+                  "description": "Set while the proxy engine is still being brought up to date.",
+                  "type": "boolean"
+                },
+                "updated_at": {
+                  "description": "When it last changed.",
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "username": {
+                  "description": "The proxy username.",
+                  "type": "string"
+                },
+                "whitelists": {
+                  "description": "Client IPs that may use the proxies without a password.",
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "id",
+                "service_id",
+                "label",
+                "username",
+                "status",
+                "effective_status",
+                "sync_pending",
+                "proxies",
+                "whitelists",
+                "created_at",
+                "updated_at"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "page": {
+            "description": "The current page number.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "page_size": {
+            "description": "The number of items per page.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "description": "The total number of items across all pages.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "type": "object"
+      },
+      "PaginatedResponse_UsageRecord": {
+        "description": "A generic container for paginated API responses.",
+        "properties": {
+          "items": {
+            "description": "The items for the current page.",
+            "items": {
+              "description": "Represents a single usage statistic record.",
+              "properties": {
+                "abuse_connections": {
+                  "description": "Connections blocked due to concurrency limits.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "abuse_rps": {
+                  "description": "Requests blocked due to RPS limits.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "bytes_in": {
+                  "description": "Bytes received.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "bytes_out": {
+                  "description": "Bytes sent.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "http_bytes_in": {
+                  "description": "Bytes received through HTTP forwarding and `CONNECT` tunnels.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "http_bytes_out": {
+                  "description": "Bytes sent through HTTP forwarding and `CONNECT` tunnels.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "http_connections": {
+                  "description": "Successful HTTP forwarding and `CONNECT` connections.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "max_rps": {
+                  "description": "Max RPS observed.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "socks5_tcp_bytes_in": {
+                  "description": "Bytes received through SOCKS5 `TCP CONNECT` tunnels.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "socks5_tcp_bytes_out": {
+                  "description": "Bytes sent through SOCKS5 `TCP CONNECT` tunnels.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "socks5_tcp_connections": {
+                  "description": "Successful SOCKS5 `TCP CONNECT` connections.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "socks5_udp_bytes_in": {
+                  "description": "Payload bytes received through SOCKS5 `UDP ASSOCIATE` relays.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "socks5_udp_bytes_out": {
+                  "description": "Payload bytes sent through SOCKS5 `UDP ASSOCIATE` relays.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "socks5_udp_connections": {
+                  "description": "Successful SOCKS5 `UDP ASSOCIATE` sessions.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "timestamp": {
+                  "description": "Record timestamp.",
+                  "type": "string"
+                },
+                "total_connections": {
+                  "description": "Total successful connections.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "user_id": {
+                  "description": "User ID.",
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "page": {
+            "description": "The current page number.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "page_size": {
+            "description": "The number of items per page.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "description": "The total number of items across all pages.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "type": "object"
+      },
+      "PaginatedResponse_WebhookDelivery": {
+        "description": "A generic container for paginated API responses.",
+        "properties": {
+          "items": {
+            "description": "The items for the current page.",
+            "items": {
+              "description": "One event sent, or being sent, to an endpoint.",
+              "properties": {
+                "attempts": {
+                  "description": "Attempts made.",
+                  "format": "int32",
+                  "type": "integer"
+                },
+                "created_at": {
+                  "description": "When it was queued.",
+                  "format": "date-time",
+                  "type": "string"
+                },
+                "data": {
+                  "description": "The event's data, as sent in the body's `data`."
+                },
+                "delivered_at": {
+                  "description": "When it was delivered.",
+                  "format": "date-time",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "event_id": {
+                  "description": "The event, also sent as `HypeProxies-Event-Id` and as the body's `id`; a retry keeps it.",
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "event_type": {
+                  "description": "The event type.",
+                  "type": "string"
+                },
+                "id": {
+                  "description": "The delivery, also sent as `HypeProxies-Delivery-Id`.",
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "last_attempt_at": {
+                  "description": "The last attempt.",
+                  "format": "date-time",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "last_duration_ms": {
+                  "description": "How long the last attempt took, in milliseconds.",
+                  "format": "int32",
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "last_error": {
+                  "description": "Why the last attempt failed.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "last_response": {
+                  "description": "The start of the last response body.",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "last_status_code": {
+                  "description": "The HTTP status of the last attempt's response.",
+                  "format": "int32",
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "next_attempt_at": {
+                  "description": "The next attempt, while pending.",
+                  "format": "date-time",
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "object_id": {
+                  "description": "The object the event is about, as `<type>:<id>`.",
+                  "type": "string"
+                },
+                "sequence": {
+                  "description": "The event's place among its object's events.",
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "status": {
+                  "description": "`pending` (being retried), `succeeded`, or `failed` (given up).",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "event_id",
+                "event_type",
+                "object_id",
+                "sequence",
+                "status",
+                "attempts",
+                "created_at",
+                "data"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "page": {
+            "description": "The current page number.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "page_size": {
+            "description": "The number of items per page.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "description": "The total number of items across all pages.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "type": "object"
+      },
+      "PlanIps": {
+        "description": "Shared IPs left for plans, per use case.",
+        "properties": {
+          "retail": {
+            "description": "IPs left for retail plans.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "ticket": {
+            "description": "IPs left for ticketing plans.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ticket",
+          "retail"
+        ],
+        "type": "object"
+      },
+      "PlanPrice": {
+        "description": "The monthly price of a pay-as-you-go plan.",
+        "properties": {
+          "ips": {
+            "description": "IPs in the plan: one of 25, 50, 100 or 250.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "price_cents": {
+            "description": "Monthly price of the plan.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ips",
+          "price_cents"
+        ],
+        "type": "object"
+      },
+      "PriceList": {
+        "description": "The reseller price list, monthly, shared by every approved reseller.",
+        "properties": {
+          "plans": {
+            "description": "Price per pay-as-you-go plan, smallest first.",
+            "items": {
+              "$ref": "#/components/schemas/PlanPrice"
+            },
+            "type": "array"
+          },
+          "subnet_tiers": {
+            "description": "Price per dedicated /24 by volume, lowest `min_subnets` first.",
+            "items": {
+              "$ref": "#/components/schemas/SubnetTier"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "subnet_tiers",
+          "plans"
+        ],
+        "type": "object"
+      },
+      "ProxyInstanceResponse": {
+        "description": "Enhanced Proxy Instance Response with resolved IPs and Plan Details.",
+        "properties": {
+          "addons": {
+            "description": "List of active addons.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "assigned_ips": {
+            "description": "Resolved List of IPs/CIDRs assigned to this instance.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "configuration": {
+            "description": "Configuration snapshot."
+          },
+          "connection_status": {
+            "description": "Live connection status derived from the hosting node's health check:\n`online` (node healthy), `degraded` (one health probe failing),\n`offline` (node unreachable), or `unknown` (no node assigned / not yet\nprobed). This reflects infrastructure reachability, independent of the\naccount-level `status` above.",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "Timestamp when the instance was created.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "external_id": {
+            "description": "Engine-side state-manager user ID, when provisioning reached the engine.",
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "Unique identifier for the proxy instance.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "ip_count": {
+            "description": "Number of IPs included in the plan.",
+            "format": "int32",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "proxy_password": {
+            "description": "Password for proxy authentication.\n\n**Critical:** This field contains the plaintext password decrypted from the database.\nThe user must see this to configure their proxy clients.",
+            "type": "string"
+          },
+          "proxy_username": {
+            "description": "Username for proxy authentication.",
+            "type": "string"
+          },
+          "renewal_date": {
+            "description": "Date when the current subscription period ends (renewal date).",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "service_id": {
+            "description": "ID of the service purchase.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "description": "Status of the instance.",
+            "type": "string"
+          },
+          "sync_error": {
+            "description": "Last engine sync error, when a retry is pending.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sync_status": {
+            "description": "Engine sync state for this instance: provisioning, retrying, failed, or synced.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "service_id",
+          "proxy_username",
+          "proxy_password",
+          "assigned_ips",
+          "configuration",
+          "status",
+          "sync_status",
+          "connection_status",
+          "created_at"
+        ],
+        "type": "object"
+      },
+      "ProxyListExport": {
+        "description": "Response for proxy list export.",
+        "properties": {
+          "format": {
+            "description": "The format of the export (e.g. \"json\", \"list\").",
+            "type": "string"
+          },
+          "proxies": {
+            "description": "The list of proxy credentials and details.",
+            "items": {
+              "$ref": "#/components/schemas/ProxyListItem"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "format",
+          "proxies"
+        ],
+        "type": "object"
+      },
+      "ProxyListItem": {
+        "description": "Detailed information about a single proxy item in the list.",
+        "properties": {
+          "ip": {
+            "description": "The IP address (and CIDR mask if applicable).",
+            "type": "string"
+          },
+          "isp": {
+            "description": "ISP Name (e.g., \"Comcast\", \"`DigitalOcean`\").",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "location": {
+            "description": "Location string (e.g., \"United States, New York\").",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "password": {
+            "description": "Password for authentication.",
+            "type": "string"
+          },
+          "pool": {
+            "description": "The ID or name of the pool this IP belongs to.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "port": {
+            "description": "Per-proxy assigned listener port.",
+            "format": "int32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": {
+            "description": "Proxy Type (e.g., \"ISP\", \"Datacenter\").",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "username": {
+            "description": "Username for authentication.",
+            "type": "string"
+          },
+          "was_replaced": {
+            "description": "True when this IP was issued through a recent replacement request.\nUsed by the UI to surface newly-rotated IPs in the proxy list.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ip",
+          "port",
+          "username",
+          "password",
+          "was_replaced"
+        ],
+        "type": "object"
+      },
+      "ReplaceProxyRequest": {
+        "description": "Request to replace a set of IPs on a proxy instance with newly-allocated ones.",
+        "properties": {
+          "ips": {
+            "description": "IP addresses to replace. Each must currently belong to the instance.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "reason": {
+            "description": "Customer or admin supplied reason stored in replacement history.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ips",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "ResellerIdentity": {
+        "description": "The workspace owner's identity verification. Only what Stripe concluded is kept:\nnever the document or selfie images.",
+        "properties": {
+          "error_code": {
+            "description": "Stripe's reason code for the last failed attempt, such as `document_expired`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "failures": {
+            "description": "Failed or cancelled attempts for this application.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "status": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/IdentityStatus",
+                "description": "`null` until the owner starts verifying."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "updated_at": {
+            "description": "When Stripe last reported on the verification.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "failures"
+        ],
+        "type": "object"
+      },
+      "ResellerOrder": {
+        "description": "An accepted reseller order.",
+        "properties": {
+          "order_id": {
+            "description": "The order.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "services": {
+            "description": "The services it created, one per /24 or plan. They are provisioned shortly after.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "total_cents": {
+            "description": "Amount taken from the wallet.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "unit_price_cents": {
+            "description": "Monthly price of each service.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "order_id",
+          "services",
+          "unit_price_cents",
+          "total_cents"
+        ],
+        "type": "object"
+      },
+      "ResellerOrderRequest": {
+        "description": "A reseller wallet order. Send an `Idempotency-Key` header (a UUID) with it. Unknown fields\nare refused, so a field the order would ignore (such as an old `location`) is never\ncharged as an order without it.",
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "description": "Dedicated /24s at the volume price.",
+            "properties": {
+              "carrier": {
+                "description": "Carrier such as `verizon` or `att`; any carrier when left out.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "max_total_cents": {
+                "description": "The most the order may take from the wallet. When prices went up since the\nreseller looked, the order is refused instead of charged more.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "quantity": {
+                "description": "How many /24s, 1 to 100.",
+                "format": "int32",
+                "type": "integer"
+              },
+              "site": {
+                "description": "The site, by slug such as `ashburn-va`: one of the carrier's sites from\n`/reseller/inventory`. Any site when left out.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "type": {
+                "enum": [
+                  "subnets"
+                ],
+                "type": "string"
+              },
+              "use_case": {
+                "$ref": "#/components/schemas/UseCase",
+                "description": "What the IPs are used for."
+              }
+            },
+            "required": [
+              "quantity",
+              "use_case",
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "description": "A pay-as-you-go plan of shared ISP IPs.",
+            "properties": {
+              "carrier": {
+                "description": "Carrier such as `verizon` or `att`; any carrier when left out.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "ips": {
+                "description": "IPs in the plan: 25, 50, 100 or 250.",
+                "format": "int32",
+                "type": "integer"
+              },
+              "max_total_cents": {
+                "description": "The most the order may take from the wallet; see `Subnets`.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "site": {
+                "description": "The site, by slug such as `ashburn-va`: one of the carrier's sites from\n`/reseller/inventory`. Any site when left out.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "type": {
+                "enum": [
+                  "plan"
+                ],
+                "type": "string"
+              },
+              "use_case": {
+                "$ref": "#/components/schemas/UseCase",
+                "description": "What the IPs are used for."
+              }
+            },
+            "required": [
+              "ips",
+              "use_case",
+              "type"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "ResellerPack": {
+        "description": "A pack.",
+        "properties": {
+          "charged_cents": {
+            "description": "What the plan took from the wallet, when one was bought.",
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "created_at": {
+            "description": "When it was asked for.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "failure": {
+            "description": "Why the pack failed.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "The pack.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "ips": {
+            "description": "IPs the customer gets.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "label": {
+            "description": "The reseller's name for the customer.",
+            "type": "string"
+          },
+          "order_id": {
+            "description": "The plan order, when a plan was bought for the pack.",
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reference": {
+            "description": "The reseller's own reference for the customer.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "service_id": {
+            "description": "The service the sub-user is made from.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PackStatus",
+            "description": "Where it stands."
+          },
+          "subuser": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ResellerSubuser",
+                "description": "The sub-user, with its password, once ready. `null` after it was deleted."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "ips",
+          "label",
+          "service_id",
+          "created_at"
+        ],
+        "type": "object"
+      },
+      "ResellerProfile": {
+        "description": "A workspace's reseller profile.",
+        "properties": {
+          "company_name": {
+            "description": "Business name the reseller sells under.",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "When the workspace applied.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "expected_subnets": {
+            "description": "How many /24s the reseller expects to need, if given.",
+            "format": "int32",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "identity": {
+            "$ref": "#/components/schemas/ResellerIdentity",
+            "description": "The workspace owner's identity verification."
+          },
+          "organization_id": {
+            "description": "The reseller's workspace.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "review_reason": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewReason",
+                "description": "Why the application waits for staff instead of activating itself, while pending."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reviewed_at": {
+            "description": "When staff last reviewed it, or when a verified identity activated it.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sales_channel": {
+            "description": "How the reseller sells (storefront, Discord, own platform...), if given.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/ResellerStatus",
+            "description": "Program status."
+          },
+          "website": {
+            "description": "The reseller's website, if given.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "organization_id",
+          "company_name",
+          "status",
+          "created_at",
+          "identity"
+        ],
+        "type": "object"
+      },
+      "ResellerService": {
+        "description": "A reseller service delivered to one of the reseller's customers.",
+        "properties": {
+          "cancel_at_period_end": {
+            "description": "Set when the service ends at the end of its period.",
+            "type": "boolean"
+          },
+          "carrier": {
+            "description": "Carrier, when one was chosen.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "description": "When the service was bought.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "free_ips": {
+            "description": "IPv4 addresses that no sub-user serves, which packs are carved from. `null` until\nprovisioned.",
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "instance_id": {
+            "description": "The proxy login: use it with `/v1/service/proxy/{instance_id}/list` for the proxies\nand credentials, and `/credentials` to rotate the password. `null` until provisioned.",
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ips": {
+            "description": "IPs in the service.",
+            "format": "int32",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "label": {
+            "description": "The reseller's name for the customer.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "price_cents": {
+            "description": "Monthly price of the service.",
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "product": {
+            "description": "`subnet` or `plan`.",
+            "type": "string"
+          },
+          "proxy_username": {
+            "description": "The proxy username, once provisioned.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ready": {
+            "description": "Whether the service is active and its proxies are provisioned. Right after provisioning,\nthe engine may still be receiving the IPs through a queued retry.",
+            "type": "boolean"
+          },
+          "reference": {
+            "description": "The reseller's own reference for the customer, such as its customer ID.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "renews_at": {
+            "description": "When the paid period ends and the service renews.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "service_id": {
+            "description": "The service.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "description": "`active`, `suspended` or `cancelled`.",
+            "type": "string"
+          },
+          "use_case": {
+            "description": "What the IPs are used for.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "service_id",
+          "product",
+          "status",
+          "cancel_at_period_end",
+          "ready",
+          "created_at"
+        ],
+        "type": "object"
+      },
+      "ResellerServices": {
+        "description": "The workspace's reseller services.",
+        "properties": {
+          "services": {
+            "description": "Oldest first.",
+            "items": {
+              "$ref": "#/components/schemas/ResellerService"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "services"
+        ],
+        "type": "object"
+      },
+      "ResellerStatus": {
+        "description": "Where a workspace stands in the reseller program.",
+        "enum": [
+          "pending",
+          "active",
+          "rejected",
+          "suspended"
+        ],
+        "type": "string"
+      },
+      "ResellerStatusResponse": {
+        "description": "The current workspace's reseller profile, if it has applied.",
+        "properties": {
+          "can_verify_identity": {
+            "description": "Whether the caller is the workspace owner, the one person who verifies its identity.",
+            "type": "boolean"
+          },
+          "profile": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ResellerProfile",
+                "description": "`null` until the workspace applies."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "can_verify_identity"
+        ],
+        "type": "object"
+      },
+      "ResellerSubuser": {
+        "description": "A proxy login for one of the reseller's customers.",
+        "properties": {
+          "created_at": {
+            "description": "When it was created.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "effective_status": {
+            "description": "Whether the proxies work: `active` only while the sub-user is active and its service is\nactive, `suspended` otherwise.",
+            "type": "string"
+          },
+          "id": {
+            "description": "The sub-user.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "label": {
+            "description": "The reseller's name for the customer.",
+            "type": "string"
+          },
+          "password": {
+            "description": "The proxy password. Left out of lists; read one sub-user to get it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "proxies": {
+            "description": "The proxies, as IP and port; connect with the username and password.",
+            "items": {
+              "$ref": "#/components/schemas/SubuserProxy"
+            },
+            "type": "array"
+          },
+          "reference": {
+            "description": "The reseller's own reference for the customer.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "service_id": {
+            "description": "The reseller service whose IPs it serves.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "description": "`active`, or `suspended` when the reseller paused it.",
+            "type": "string"
+          },
+          "sync_pending": {
+            "description": "Set while the proxy engine is still being brought up to date.",
+            "type": "boolean"
+          },
+          "updated_at": {
+            "description": "When it last changed.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "username": {
+            "description": "The proxy username.",
+            "type": "string"
+          },
+          "whitelists": {
+            "description": "Client IPs that may use the proxies without a password.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "service_id",
+          "label",
+          "username",
+          "status",
+          "effective_status",
+          "sync_pending",
+          "proxies",
+          "whitelists",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "ResellerWallet": {
+        "description": "The workspace wallet that reseller orders and renewals are paid from. Read-only: top up\nin the dashboard.",
+        "properties": {
+          "balance_cents": {
+            "description": "What the wallet holds now, in US cents.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "upcoming_renewals": {
+            "description": "The reseller services that renew from the wallet at the end of their period, soonest\nfirst. Services that are suspended (paid by hand), cancelled or set to end are left out.",
+            "items": {
+              "$ref": "#/components/schemas/WalletRenewal"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "balance_cents",
+          "upcoming_renewals"
+        ],
+        "type": "object"
+      },
+      "ReviewReason": {
+        "description": "Why an application waits for staff instead of activating itself.",
+        "enum": [
+          "identity_country",
+          "identity_failures",
+          "reapplied",
+          "prior_decision"
+        ],
+        "type": "string"
+      },
+      "SetSubuserIps": {
+        "description": "The IPs a sub-user serves, all of them the service's.",
+        "properties": {
+          "ips": {
+            "description": "At least one of the service's IPs.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "ips"
+        ],
+        "type": "object"
+      },
+      "SetSubuserWhitelists": {
+        "description": "The client IPs a sub-user authenticates by.",
+        "properties": {
+          "whitelists": {
+            "description": "Client IPv4 addresses; empty to clear.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "whitelists"
+        ],
+        "type": "object"
+      },
+      "SiteStock": {
+        "description": "Free stock of a carrier at one physical site.",
+        "properties": {
+          "name": {
+            "description": "The datacenter's name, such as `Ashburn, VA`.",
+            "type": "string"
+          },
+          "plan_ips_available": {
+            "$ref": "#/components/schemas/PlanIps",
+            "description": "Shared IPs left there for plans, per use case."
+          },
+          "site": {
+            "description": "The site's slug, which an order names, such as `ashburn-va`.",
+            "type": "string"
+          },
+          "subnets_available": {
+            "description": "Whole /24s that can still be sold there.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "site",
+          "name",
+          "subnets_available",
+          "plan_ips_available"
+        ],
+        "type": "object"
+      },
+      "SourceIpUsageSummary": {
+        "description": "Selected-period usage grouped by authenticated client/source IP.",
+        "properties": {
+          "bytes_in": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "bytes_out": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "connections": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "first_seen": {
+            "type": "string"
+          },
+          "last_seen": {
+            "type": "string"
+          },
+          "source_ip": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_ip",
+          "connections",
+          "bytes_in",
+          "bytes_out",
+          "first_seen",
+          "last_seen"
+        ],
+        "type": "object"
+      },
+      "SubnetTier": {
+        "description": "The /24 price once a reseller holds at least `min_subnets` of them.",
+        "properties": {
+          "min_subnets": {
+            "description": "/24s held, this order included, from which the tier applies.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "price_cents": {
+            "description": "Monthly price of one /24.",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "min_subnets",
+          "price_cents"
+        ],
+        "type": "object"
+      },
+      "SubuserProxy": {
+        "description": "One of a sub-user's proxies.",
+        "properties": {
+          "ip": {
+            "description": "The IP the proxy exits from, one of the service's IPs.",
+            "type": "string"
+          },
+          "port": {
+            "description": "The port to connect to.",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ip",
+          "port"
+        ],
+        "type": "object"
+      },
+      "UpdateIpsRequest": {
+        "description": "Request payload to update generic IP lists (e.g., whitelists).",
+        "properties": {
+          "ips": {
+            "description": "List of IPs.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "ips"
+        ],
+        "type": "object"
+      },
+      "UpdateUserCredentialsRequest": {
+        "description": "Request payload to update credentials.",
+        "properties": {
+          "password": {
+            "description": "New password.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "type": "object"
+      },
+      "UsageGranularity": {
+        "description": "Server-side aggregation interval for usage graphs.",
+        "enum": [
+          "hour",
+          "day"
+        ],
+        "type": "string"
+      },
+      "UsageRollupBucket": {
+        "description": "One server-computed usage graph bucket.",
+        "properties": {
+          "abuse_connections": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "abuse_rps": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "avg_connection_duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "bucket_start": {
+            "type": "string"
+          },
+          "bytes_in": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "bytes_out": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "connection_duration_count": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "connection_duration_total_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "http_bytes_in": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "http_bytes_out": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "http_connections": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "max_connection_duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "max_rps": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "socks5_tcp_bytes_in": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "socks5_tcp_bytes_out": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "socks5_tcp_connections": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "socks5_udp_bytes_in": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "socks5_udp_bytes_out": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "socks5_udp_connections": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "total_connections": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "bucket_start",
+          "bytes_in",
+          "bytes_out",
+          "total_connections",
+          "abuse_connections",
+          "abuse_rps",
+          "max_rps",
+          "http_bytes_in",
+          "http_bytes_out",
+          "http_connections",
+          "socks5_tcp_bytes_in",
+          "socks5_tcp_bytes_out",
+          "socks5_tcp_connections",
+          "socks5_udp_bytes_in",
+          "socks5_udp_bytes_out",
+          "socks5_udp_connections",
+          "connection_duration_total_ms",
+          "connection_duration_count",
+          "avg_connection_duration_ms",
+          "max_connection_duration_ms"
+        ],
+        "type": "object"
+      },
+      "UsageRollupResponse": {
+        "description": "State-manager response powering dashboard totals and graphs.",
+        "properties": {
+          "buckets": {
+            "items": {
+              "$ref": "#/components/schemas/UsageRollupBucket"
+            },
+            "type": "array"
+          },
+          "by_ip": {
+            "items": {
+              "$ref": "#/components/schemas/IpBandwidthSummary"
+            },
+            "type": "array"
+          },
+          "granularity": {
+            "$ref": "#/components/schemas/UsageGranularity"
+          },
+          "source_ips": {
+            "items": {
+              "$ref": "#/components/schemas/SourceIpUsageSummary"
+            },
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/UsageRollupTotals"
+          }
+        },
+        "required": [
+          "granularity",
+          "buckets",
+          "totals",
+          "by_ip"
+        ],
+        "type": "object"
+      },
+      "UsageRollupTotals": {
+        "description": "Selected-period totals computed by state manager from same rollup query.",
+        "properties": {
+          "abuse_connections": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "abuse_rps": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "avg_connection_duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "bytes_in": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "bytes_out": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "connection_duration_count": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "connection_duration_total_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "http_bytes_in": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "http_bytes_out": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "http_connections": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "max_connection_duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "max_rps": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "socks5_tcp_bytes_in": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "socks5_tcp_bytes_out": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "socks5_tcp_connections": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "socks5_udp_bytes_in": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "socks5_udp_bytes_out": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "socks5_udp_connections": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "total_connections": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "bytes_in",
+          "bytes_out",
+          "total_connections",
+          "abuse_connections",
+          "abuse_rps",
+          "max_rps",
+          "http_bytes_in",
+          "http_bytes_out",
+          "http_connections",
+          "socks5_tcp_bytes_in",
+          "socks5_tcp_bytes_out",
+          "socks5_tcp_connections",
+          "socks5_udp_bytes_in",
+          "socks5_udp_bytes_out",
+          "socks5_udp_connections",
+          "connection_duration_total_ms",
+          "connection_duration_count",
+          "avg_connection_duration_ms",
+          "max_connection_duration_ms"
+        ],
+        "type": "object"
+      },
+      "UseCase": {
+        "description": "What the IPs are used for; the same IP can be sold once per use case.",
+        "enum": [
+          "ticket",
+          "retail"
+        ],
+        "type": "string"
+      },
+      "WalletRenewal": {
+        "description": "A reseller service that renews from the wallet.",
+        "properties": {
+          "amount_cents": {
+            "description": "The monthly price the renewal takes, in US cents. `null` when the service has no\nrecorded price; staff settle its renewal by hand.",
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "due_at": {
+            "description": "When the paid period ends and the renewal is taken from the wallet.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "service_id": {
+            "description": "The service.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service_id",
+          "due_at"
+        ],
+        "type": "object"
+      },
+      "WebhookDelivery": {
+        "description": "One event sent, or being sent, to an endpoint.",
+        "properties": {
+          "attempts": {
+            "description": "Attempts made.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "created_at": {
+            "description": "When it was queued.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "data": {
+            "description": "The event's data, as sent in the body's `data`."
+          },
+          "delivered_at": {
+            "description": "When it was delivered.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "event_id": {
+            "description": "The event, also sent as `HypeProxies-Event-Id` and as the body's `id`; a retry keeps it.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "event_type": {
+            "description": "The event type.",
+            "type": "string"
+          },
+          "id": {
+            "description": "The delivery, also sent as `HypeProxies-Delivery-Id`.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "last_attempt_at": {
+            "description": "The last attempt.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "last_duration_ms": {
+            "description": "How long the last attempt took, in milliseconds.",
+            "format": "int32",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "last_error": {
+            "description": "Why the last attempt failed.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "last_response": {
+            "description": "The start of the last response body.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "last_status_code": {
+            "description": "The HTTP status of the last attempt's response.",
+            "format": "int32",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "next_attempt_at": {
+            "description": "The next attempt, while pending.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "object_id": {
+            "description": "The object the event is about, as `<type>:<id>`.",
+            "type": "string"
+          },
+          "sequence": {
+            "description": "The event's place among its object's events.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "description": "`pending` (being retried), `succeeded`, or `failed` (given up).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "event_id",
+          "event_type",
+          "object_id",
+          "sequence",
+          "status",
+          "attempts",
+          "created_at",
+          "data"
+        ],
+        "type": "object"
+      },
+      "WebhookEndpoint": {
+        "description": "An HTTPS endpoint the reseller's events are sent to.",
+        "properties": {
+          "consecutive_failures": {
+            "description": "Failed attempts since the last success.",
+            "format": "int32",
+            "type": "integer"
+          },
+          "created_at": {
+            "description": "When it was registered.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "description": "The reseller's note.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "disabled_at": {
+            "description": "When it was disabled.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "disabled_reason": {
+            "description": "Why it is disabled: `owner` (turned off; gets no new events) or `failures` (turned off\nafter a day of failed deliveries; keeps its events until it is enabled again).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "enabled": {
+            "description": "Whether events are being sent to it.",
+            "type": "boolean"
+          },
+          "events": {
+            "description": "The event types it receives.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "failing_since": {
+            "description": "The first failed attempt since the last success.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "id": {
+            "description": "The endpoint.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "last_success_at": {
+            "description": "The last successful delivery.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "secret_rotated_at": {
+            "description": "When the signing secret was created or last rotated.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "updated_at": {
+            "description": "When it last changed.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "description": "Where events are posted.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "events",
+          "enabled",
+          "consecutive_failures",
+          "secret_rotated_at",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "WebhookEndpointWithSecret": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/WebhookEndpoint",
+            "description": "The endpoint."
+          },
+          {
+            "properties": {
+              "secret": {
+                "description": "The signing secret. Store it now: it is never shown again. Each delivery carries\n`HypeProxies-Signature: t=<unix seconds>,v1=<hex>`, where `<hex>` is the HMAC-SHA256 of\n`<t>.<raw request body>` under this secret.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "secret"
+            ],
+            "type": "object"
+          }
+        ],
+        "description": "An endpoint with its signing secret, returned only when the secret is created or rotated."
+      },
+      "WhitelistEntry": {
+        "description": "Whitelist entry metadata for proxy IP authentication.",
+        "properties": {
+          "added_at": {
+            "description": "Timestamp when this IP was added.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "address": {
+            "description": "Whitelisted IP address.",
+            "type": "string"
+          },
+          "id": {
+            "description": "Unique identifier for the whitelist row.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "address",
+          "added_at"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "api_key": {
+        "description": "Send `Authorization: ApiKey <key>`.",
+        "in": "header",
+        "name": "Authorization",
+        "type": "apiKey"
+      },
+      "bearer_auth": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Run a proxy reselling business on HypeProxies from your own systems.\n\n**How reselling works.** You prepay a wallet with us and buy dedicated /24s or IP plans from it\nat your reseller prices, in the dashboard or with this API. You split each one into proxy logins\nfor your own customers with sub-users, and charge your customers on your own store and your own\nStripe account: we never see or touch your customers' payments. Every /24 and plan renews\nmonthly from your wallet automatically, so keep it funded.\n\n**Base URL.** Every path below starts at `https://app.hypeproxies.com/api`, for example\n`https://app.hypeproxies.com/api/v1/reseller/prices`.\n\n**Authentication.** Create an API key in the dashboard under API keys and send it as\n`Authorization: ApiKey <key>`. A key acts for the workspace it belongs to. Keys with only the\n`read` scope can look but not buy or change anything; keys can also expire and be limited to\nyour servers' IPs. A full-access key spends the workspace wallet, so keep it on your servers\nonly. Adding credits to the wallet is done in the dashboard, not through this API.\n\n**Getting started.**\n1. `GET /v1/reseller` shows whether the workspace is an approved reseller, and\n`GET /v1/reseller/wallet` what the wallet holds and which services renew from it next.\n2. `GET /v1/reseller/prices` and `GET /v1/reseller/inventory` show your price list and what\ncan be bought now, per carrier and physical site (`ashburn-va`); an order may name a site.\n3. `POST /v1/reseller/orders` with an `Idempotency-Key` header buys a dedicated /24 or a plan\nfrom the workspace wallet. Retrying with the same key never buys twice. An order the wallet\ncannot cover is refused with 409 `Insufficient wallet balance` and takes nothing.\n4. `GET /v1/reseller/services` lists what you bought. A service is ready to hand out once its\n`ready` is true, usually within a minute.\n5. Split a service between your customers with sub-users:\n`POST /v1/reseller/services/{service_id}/subusers` creates a proxy login on some of the\nservice's IPs (`ip_count`, or a list of `ips`) and returns its username, password and proxies.\n`GET /v1/reseller/services/{service_id}/subusers` lists them. Each sub-user can be suspended\nand resumed, given other IPs, whitelisted by client IP and have its password rotated, so you\ncut one customer off without touching the others.\n6. Or let us find the IPs: `POST /v1/reseller/packs` with an `Idempotency-Key` header and\n`ips`, `label` and `use_case` (and optionally `carrier`, `site`, `whitelists`,\n`max_total_cents`) gives one customer a sub-user of that many IPs that no other sub-user\nserves. When one of your working /24s or plans has enough spare IPs, it is carved from them at\nonce (201, with the sub-user and its password). Otherwise the smallest plan that fits (25, 50,\n100 or 250 IPs) is bought from the wallet (202, `pending`); the sub-user is created as soon as\nthe plan is provisioned and `pack.ready` is sent, or `pack.failed` with the reason. Read it\nwith `GET /v1/reseller/packs/{pack_id}`. A plan bought this way is yours: it renews monthly\nand its spare IPs serve your next packs. A pack is refused, and nothing charged, when the\nwallet, stock or your `max_total_cents` cannot cover the plan or a whitelisted client IP is\nalready in use. A pack can still fail after its plan was bought (`pack.failed`): when the plan\nis not ready within a day, or a whitelisted client IP or the plan's IPs were taken meanwhile;\nthe plan stays yours and its IPs serve your next pack.\n7. Or hand a whole service to one customer: label it with your customer's name and your own\nreference with `PATCH /v1/reseller/services/{service_id}` (find it again with `?reference=`),\nread its proxies with `GET /v1/service/proxy/{instance_id}/list`, and change its password with\n`PUT /v1/service/proxy/{instance_id}/credentials`.\n\n**Errors.** A refused call answers with its status and `{\"error\": \"<reason>\"}`. Refusals your\ncode may want to handle also carry a stable `code`; match on it, not on the text:\n- `insufficient_balance` (409): the wallet cannot cover an order, or a pack's plan. Add\ncredits in the dashboard.\n- `out_of_stock` (409): no carrier on offer has stock for an order that names no carrier.\nTry again later, or order less.\n- `subuser_limit` (409): the service already has the most sub-users it can have (254).\n\n**Webhooks.** Instead of polling, register an HTTPS endpoint with `POST /v1/reseller/webhooks`.\nWe post a JSON event to it whenever an order completes, a service is provisioned, suspended,\nresumed or ended, a sub-user is created, updated or deleted, a pack is ready or failed, or the\nwallet runs low or is reloaded. The answer carries the endpoint's signing secret, shown once. Every request has a\n`HypeProxies-Signature: t=<unix seconds>,v1=<hex>` header: compute HMAC-SHA256 of\n`<t>.<raw body>` with the secret, compare it to `v1` in constant time, and reject a `t` more\nthan five minutes old. Answer with any 2xx within 15 seconds. A failed delivery is retried\nfor 24 hours, so drop duplicates by the event `id`. Events about one object (its `object`)\narrive in order, numbered by `sequence`; a failing event holds back later events of that\nobject only. An endpoint that fails every delivery for 24 hours is disabled and the\nworkspace owner emailed; enabling it again sends the events it missed.\n\n**Example: a first order and a sub-user with curl.** Keep the `Idempotency-Key` with your own\norder record and send the same one if you retry.\n\n```sh\nexport HP_KEY=...   # your API key\ncurl -X POST \"https://app.hypeproxies.com/api/v1/reseller/orders\" \\\n  -H \"Authorization: ApiKey $HP_KEY\" -H \"Content-Type: application/json\" \\\n  -H \"Idempotency-Key: 7d4c3c1e-5b8a-4b8e-9a51-0c6a2e1d9f10\" \\\n  -d '{\"type\": \"plan\", \"ips\": 25, \"use_case\": \"retail\"}'\n# The answer lists the new service in \"services\". Once GET /v1/reseller/services shows\n# it \"ready\" (usually within a minute), give one of your customers 5 of its IPs:\nexport SERVICE_ID=...   # from the order's \"services\"\ncurl -X POST \"https://app.hypeproxies.com/api/v1/reseller/services/$SERVICE_ID/subusers\" \\\n  -H \"Authorization: ApiKey $HP_KEY\" -H \"Content-Type: application/json\" \\\n  -d '{\"label\": \"Customer 1042\", \"reference\": \"cus_1042\", \"ip_count\": 5}'\n```\n\n**Example: the same in Node.js (18 or later).**\n\n```js\nimport crypto from \"node:crypto\";\n\nconst base = \"https://app.hypeproxies.com/api\";\nasync function call(path, init = {}) {\n  const response = await fetch(base + path, {\n    ...init,\n    headers: {\n      Authorization: `ApiKey ${process.env.HP_KEY}`,\n      \"Content-Type\": \"application/json\",\n      ...init.headers,\n    },\n  });\n  const body = await response.json();\n  if (!response.ok) throw new Error(`${response.status} ${body.error}`);\n  return body;\n}\n\n// Store the key with your order and reuse it on a retry: it never buys twice.\nconst order = await call(\"/v1/reseller/orders\", {\n  method: \"POST\",\n  headers: { \"Idempotency-Key\": crypto.randomUUID() },\n  body: JSON.stringify({ type: \"plan\", ips: 25, use_case: \"retail\" }),\n});\n// Wait until the new service is provisioned, usually within a minute.\nconst serviceId = order.services[0];\nfor (let ready = false; !ready; ) {\n  await new Promise((resolve) => setTimeout(resolve, 5000));\n  const { services } = await call(\"/v1/reseller/services\");\n  ready = services.some((service) => service.service_id === serviceId && service.ready);\n}\n// Split it for a customer: a login on 5 of its IPs.\nconst subuser = await call(`/v1/reseller/services/${serviceId}/subusers`, {\n  method: \"POST\",\n  body: JSON.stringify({ label: \"Customer 1042\", reference: \"cus_1042\", ip_count: 5 }),\n});\nconsole.log(subuser.username, subuser.password, subuser.proxies);\n```\n\n**Example: checking a webhook's signature in Node.js.** Pass the body exactly as received,\nbefore any JSON parsing.\n\n```js\nimport crypto from \"node:crypto\";\n\nexport function verifySignature(rawBody, header, secret) {\n  const parts = Object.fromEntries(header.split(\",\").map((part) => part.split(\"=\")));\n  const sentAt = Number(parts.t);\n  if (!Number.isInteger(sentAt) || Math.abs(Date.now() / 1000 - sentAt) > 300) return false;\n  const expected = crypto\n    .createHmac(\"sha256\", secret)\n    .update(`${parts.t}.`)\n    .update(rawBody)\n    .digest();\n  const given = Buffer.from(parts.v1 ?? \"\", \"hex\");\n  return given.length === expected.length && crypto.timingSafeEqual(given, expected);\n}\n```",
+    "title": "HypeProxies reseller API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/v1/reseller": {
+      "get": {
+        "description": "# Errors\nReturns a database error.",
+        "operationId": "status",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerStatusResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "The current workspace's reseller profile.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/apply": {
+      "post": {
+        "description": "# Errors\nReturns validation errors, `Forbidden` for plain members and `Conflict` if the\nworkspace already has an application that was not rejected.",
+        "operationId": "apply",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyReseller"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerProfile"
+                }
+              }
+            }
+          },
+          "409": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Apply to resell for the current workspace. The workspace owner then verifies their\nidentity (`POST /reseller/identity`), which activates the application; staff can also\ndecide it themselves.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/identity": {
+      "post": {
+        "description": "# Errors\n`Forbidden` for anyone but the workspace owner, `NotFound` before applying, `Conflict` when\nthere is nothing to verify, `ServiceUnavailable` when Stripe cannot be reached.",
+        "operationId": "start",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityStart"
+                }
+              }
+            }
+          },
+          "403": {},
+          "404": {},
+          "409": {},
+          "503": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Start or resume the workspace owner's identity verification (ID document and matching\nselfie, through Stripe Identity). Open the returned URL right away: it works once.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/inventory": {
+      "get": {
+        "description": "# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
+        "operationId": "inventory",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Inventory"
+                }
+              }
+            }
+          },
+          "403": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "What can be bought right now: whole /24s and plan IPs per carrier, in all and at\neach of the carrier's physical sites. Approved resellers only.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/onboarding": {
+      "get": {
+        "description": "# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
+        "operationId": "checklist",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingChecklist"
+                }
+              }
+            }
+          },
+          "403": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Which get-started steps are done: a funded wallet, an API key, a first order, a customer\n(a labelled service or a sub-user) and a webhook endpoint. Approved resellers only.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/openapi.json": {
+      "get": {
+        "description": "# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
+        "operationId": "spec",
+        "responses": {
+          "200": {
+            "description": "OpenAPI 3 document"
+          },
+          "403": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "The reseller API as an `OpenAPI` document. Approved resellers only.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/orders": {
+      "post": {
+        "description": "# Errors\nReturns `BadRequest` for a missing key, bad order, or unknown carrier or site, `Forbidden`\nunless an owner or admin of an approved reseller, and `Conflict` when prices are\nnot set, stock or the wallet is short, or the key was used for another order.",
+        "operationId": "order",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResellerOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerOrder"
+                }
+              }
+            }
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerOrder"
+                }
+              }
+            }
+          },
+          "400": {},
+          "403": {},
+          "409": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Buy dedicated /24s or a pay-as-you-go plan from the workspace wallet, at the\nreseller price list. Send a fresh `Idempotency-Key` (UUID) per order: a retry\nwith the same key returns the first answer and never charges twice.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/packs": {
+      "post": {
+        "description": "Send a fresh `Idempotency-Key` (UUID) per pack: a retry with the same key returns the same\npack (`200`) and never charges or creates twice.\n\n# Errors\nReturns `BadRequest` for a missing key, a bad pack, or an unknown carrier or site,\n`Forbidden` unless an owner or admin of an approved reseller, `Conflict` when the key was\nused for another pack, a whitelisted client IP is already in use in the workspace, prices\nare not set or stock or the wallet is short, and `ServiceUnavailable` when the proxy engine\ndid not take the sub-user. Nothing is charged or created on an error.",
+        "operationId": "create",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePack"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerPack"
+                }
+              }
+            }
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerPack"
+                }
+              }
+            }
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerPack"
+                }
+              }
+            }
+          },
+          "400": {},
+          "403": {},
+          "409": {},
+          "503": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "A customer's sub-user of `ips` IPs that no other sub-user serves. It is carved at once from\nspare IPs of one of the workspace's working /24s or plans that match the carrier, site and\nuse case (`201`, with the sub-user and its password). When none has room, the smallest\npay-as-you-go plan that fits is bought from the wallet (`202`, `pending`); the sub-user is\ncreated as soon as the plan is provisioned, `pack.ready` is sent, and this pack shows it.\nA plan bought for a pack stays and renews; its spare IPs serve later packs.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/packs/{pack_id}": {
+      "get": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for a\npack that is not the workspace's.",
+        "operationId": "get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pack_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerPack"
+                }
+              }
+            }
+          },
+          "403": {},
+          "404": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "One of the workspace's packs, with its sub-user and password once ready.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/prices": {
+      "get": {
+        "description": "# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
+        "operationId": "prices",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PriceList"
+                }
+              }
+            }
+          },
+          "403": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "The reseller price list. Approved resellers only.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/services": {
+      "get": {
+        "description": "# Errors\nReturns `BadRequest` for a blank `reference`, and `Forbidden` unless the workspace is an\napproved reseller.",
+        "operationId": "list",
+        "parameters": [
+          {
+            "description": "Only services with this reference.",
+            "in": "query",
+            "name": "reference",
+            "required": false,
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerServices"
+                }
+              }
+            }
+          },
+          "400": {},
+          "403": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "The workspace's reseller services, each delivered to one customer. Approved resellers only.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/services/{service_id}": {
+      "patch": {
+        "description": "# Errors\nReturns `BadRequest` for a label or reference over 200 characters or with a NUL, `Forbidden` unless an\nowner or admin of an approved reseller, and `NotFound` for a service that is not one of\nthe workspace's reseller services.",
+        "operationId": "label",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabelResellerService"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerService"
+                }
+              }
+            }
+          },
+          "400": {},
+          "403": {},
+          "404": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Name a reseller service for the customer it is delivered to, with the reseller's own\nreference. A field left out stays as it is; a blank one is cleared.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/services/{service_id}/subusers": {
+      "get": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for a\nservice that is not one of the workspace's reseller services.",
+        "operationId": "list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page number to retrieve (defaults to 1).",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "int64",
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The number of items per page (from 1 to 100, defaults to 20).",
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "format": "int64",
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_ResellerSubuser"
+                }
+              }
+            }
+          },
+          "403": {},
+          "404": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "A reseller service's sub-users, oldest first, without their passwords.",
+        "tags": [
+          "Resellers"
+        ]
+      },
+      "post": {
+        "description": "# Errors\nReturns `BadRequest` for a bad label, IP or whitelist; `Forbidden` unless an owner or admin\nof an approved reseller; `NotFound` for a service that is not one of the workspace's\nreseller services; `Conflict` when the service is not active or provisioned, is ending,\nhas 254 sub-users, or a whitelisted client IP is already in use in the workspace; and\n`ServiceUnavailable` when the proxy engine did not take it.",
+        "operationId": "create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubuser"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerSubuser"
+                }
+              }
+            }
+          },
+          "400": {},
+          "403": {},
+          "404": {},
+          "409": {},
+          "503": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "A new proxy login on some of a reseller service's IPs, returned with its password. Give\neither `ips` (some of the service's IPs) or `ip_count` (that many of the IPs the fewest\nsub-users serve).",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/services/{service_id}/subusers/{subuser_id}": {
+      "delete": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, `NotFound` for a\nsub-user that is not one of this workspace service's (including one already deleted), and\n`ServiceUnavailable` when the proxy engine did not delete it, which leaves it as it was.",
+        "operationId": "delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subuser_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {},
+          "403": {},
+          "404": {},
+          "503": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Delete a sub-user: its engine user, then its rows.",
+        "tags": [
+          "Resellers"
+        ]
+      },
+      "get": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for a\nsub-user that is not one of this workspace service's.",
+        "operationId": "get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subuser_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerSubuser"
+                }
+              }
+            }
+          },
+          "403": {},
+          "404": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "One sub-user, with its password.",
+        "tags": [
+          "Resellers"
+        ]
+      },
+      "patch": {
+        "description": "# Errors\nReturns `BadRequest` for a blank label or text over 200 characters or with a NUL,\n`Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for a\nsub-user that is not one of this workspace service's.",
+        "operationId": "rename",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subuser_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabelSubuser"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerSubuser"
+                }
+              }
+            }
+          },
+          "400": {},
+          "403": {},
+          "404": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Rename a sub-user. A field left out stays as it is; a `null` or blank reference is cleared.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/services/{service_id}/subusers/{subuser_id}/ips": {
+      "put": {
+        "description": "# Errors\nReturns `BadRequest` for an empty list or an IP the service does not hold, `Forbidden`\nunless an owner or admin of an approved reseller, `NotFound` for a sub-user that is not one\nof this workspace service's, `Conflict` when the service is not active, and\n`ServiceUnavailable` when the proxy engine did not take the list, which leaves the old one.",
+        "operationId": "set_ips",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subuser_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSubuserIps"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerSubuser"
+                }
+              }
+            }
+          },
+          "400": {},
+          "403": {},
+          "404": {},
+          "409": {},
+          "503": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Set the IPs a sub-user serves, all of them the service's.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/services/{service_id}/subusers/{subuser_id}/resume": {
+      "post": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, `NotFound` for a\nsub-user that is not one of this workspace service's, and `ServiceUnavailable` when the\nproxy engine did not take it.",
+        "operationId": "resume",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subuser_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerSubuser"
+                }
+              }
+            }
+          },
+          "403": {},
+          "404": {},
+          "503": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Resume a paused sub-user. Its proxies work again once its service is active too.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/services/{service_id}/subusers/{subuser_id}/rotate-password": {
+      "post": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, `NotFound` for a\nsub-user that is not one of this workspace service's, and `ServiceUnavailable` when the\nproxy engine did not take it, which keeps the old password.",
+        "operationId": "rotate_password",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subuser_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerSubuser"
+                }
+              }
+            }
+          },
+          "403": {},
+          "404": {},
+          "503": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Give a sub-user a new random password, returned with it. The old one stops working.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/services/{service_id}/subusers/{subuser_id}/suspend": {
+      "post": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, `NotFound` for a\nsub-user that is not one of this workspace service's, and `ServiceUnavailable` when the\nproxy engine did not take it.",
+        "operationId": "suspend",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subuser_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerSubuser"
+                }
+              }
+            }
+          },
+          "403": {},
+          "404": {},
+          "503": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Pause a sub-user: its proxies stop working until it is resumed.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/services/{service_id}/subusers/{subuser_id}/whitelists": {
+      "put": {
+        "description": "# Errors\nReturns `BadRequest` for an address that is not IPv4 or more than 100, `Forbidden` unless\nan owner or admin of an approved reseller, `NotFound` for a sub-user that is not one of\nthis workspace service's, `Conflict` when the workspace's own login or another sub-user\nalready uses one, and `ServiceUnavailable` when the proxy engine did not take the list.",
+        "operationId": "set_whitelists",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subuser_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSubuserWhitelists"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerSubuser"
+                }
+              }
+            }
+          },
+          "400": {},
+          "403": {},
+          "404": {},
+          "409": {},
+          "503": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Set the client IPs a sub-user authenticates by; an empty list clears them.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/wallet": {
+      "get": {
+        "description": "# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
+        "operationId": "wallet",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResellerWallet"
+                }
+              }
+            }
+          },
+          "403": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "The wallet that orders and renewals are paid from: its balance and the reseller services\nthat renew from it next. Approved resellers only.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/webhooks": {
+      "get": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller.",
+        "operationId": "list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WebhookEndpoint"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          },
+          "403": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "The workspace's webhook endpoints, oldest first. Secrets are never listed.",
+        "tags": [
+          "Resellers"
+        ]
+      },
+      "post": {
+        "description": "# Errors\nReturns `BadRequest` for a URL that is not HTTPS, carries credentials, or does not resolve\nto a public address, an unknown event type or a long description; `Forbidden` unless an\nowner or admin of an approved reseller; and `Conflict` at 10 endpoints.",
+        "operationId": "create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewWebhookEndpoint"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointWithSecret"
+                }
+              }
+            }
+          },
+          "400": {},
+          "403": {},
+          "409": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Register an HTTPS endpoint for the workspace's events. The answer carries its signing\nsecret, which is never shown again.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/webhooks/{endpoint_id}": {
+      "delete": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "operationId": "delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {},
+          "403": {},
+          "404": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Delete an endpoint and its delivery log. Events not yet delivered to it are dropped.",
+        "tags": [
+          "Resellers"
+        ]
+      },
+      "get": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "operationId": "get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpoint"
+                }
+              }
+            }
+          },
+          "403": {},
+          "404": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "One of the workspace's endpoints, without its secret.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/webhooks/{endpoint_id}/deliveries": {
+      "get": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "operationId": "deliveries",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page number to retrieve (defaults to 1).",
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "int64",
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          },
+          {
+            "description": "The number of items per page (from 1 to 100, defaults to 20).",
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "format": "int64",
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_WebhookDelivery"
+                }
+              }
+            }
+          },
+          "403": {},
+          "404": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "The endpoint's deliveries, newest first: each event's status, attempts and last response.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/webhooks/{endpoint_id}/disable": {
+      "post": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "operationId": "disable",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpoint"
+                }
+              }
+            }
+          },
+          "403": {},
+          "404": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Turn an endpoint off. It gets no new events until it is enabled again; events already\nwaiting for it are kept.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/webhooks/{endpoint_id}/enable": {
+      "post": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "operationId": "enable",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpoint"
+                }
+              }
+            }
+          },
+          "403": {},
+          "404": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Turn an endpoint on again, with its failures cleared. Events waiting for it, including\nthose that happened while it was disabled after failures, are sent again now, in order,\neach with a fresh day of retries.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/webhooks/{endpoint_id}/rotate-secret": {
+      "post": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "operationId": "rotate_secret",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointWithSecret"
+                }
+              }
+            }
+          },
+          "403": {},
+          "404": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Replace an endpoint's signing secret. Deliveries are signed with the new one from now on,\nretries included; the answer carries it, and it is never shown again.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/reseller/webhooks/{endpoint_id}/test": {
+      "post": {
+        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "operationId": "test",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDelivery"
+                }
+              }
+            }
+          },
+          "403": {},
+          "404": {}
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Send a `webhook.test` event to the endpoint now, enabled or not, and return how it went.\nIt is tried once and does not count towards disabling the endpoint.",
+        "tags": [
+          "Resellers"
+        ]
+      }
+    },
+    "/v1/service/proxy": {
+      "get": {
+        "description": "# Errors\n\nReturns `ApiError` if the database query fails.",
+        "operationId": "list_instances",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProxyInstanceResponse"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "List of proxy instances"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "List user bought proxy service instances.",
+        "tags": [
+          "Proxies"
+        ]
+      }
+    },
+    "/v1/service/proxy/{instance_id}/": {
+      "get": {
+        "description": "# Errors\n\nReturns `ApiError` if the database query fails.",
+        "operationId": "get_instance",
+        "parameters": [
+          {
+            "description": "Instance ID",
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProxyInstanceResponse"
+                }
+              }
+            },
+            "description": "Instance Details"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Detailed service instance information.",
+        "tags": [
+          "Proxies"
+        ]
+      }
+    },
+    "/v1/service/proxy/{instance_id}/credentials": {
+      "put": {
+        "description": "# Errors\n\nReturns `ApiError` if the database or remote proxy service fails.",
+        "operationId": "update_credentials",
+        "parameters": [
+          {
+            "description": "Instance ID",
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserCredentialsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Credentials Updated"
+          },
+          "400": {
+            "description": "Invalid password"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Another password change for this proxy is in progress"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Proxy auth update.",
+        "tags": [
+          "Proxies"
+        ]
+      }
+    },
+    "/v1/service/proxy/{instance_id}/domains": {
+      "get": {
+        "description": "Scoped to THIS service's instance (not the customer's whole account) and\nkeyed by the engine-side `external_id`, which is what the state manager\nstores domain stats under.\n\n# Errors\n\nReturns `ApiError::NotFound` if the instance doesn't belong to the caller,\nor `ApiError` if the state manager is unreachable.",
+        "operationId": "get_domains",
+        "parameters": [
+          {
+            "description": "Instance ID",
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DomainStat"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Top domains"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Top requested domains for a single proxy instance.",
+        "tags": [
+          "Proxies"
+        ]
+      }
+    },
+    "/v1/service/proxy/{instance_id}/list": {
+      "get": {
+        "description": "# Errors\n\nReturns `ApiError` if the database query fails.",
+        "operationId": "get_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProxyListExport"
+                }
+              }
+            },
+            "description": "Export List"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Get detailed proxy list.",
+        "tags": [
+          "Proxies"
+        ]
+      }
+    },
+    "/v1/service/proxy/{instance_id}/replace": {
+      "post": {
+        "description": "Each IP supplied must currently belong to the caller's proxy instance.\nThe corresponding pools are released and freshly-available pools matching\nthe same tags / family are allocated in their place. The full updated IP\nlist is synced to the proxy engine before returning.\n\n# Errors\n\nReturns:\n- `ApiError::NotFound` if the instance does not belong to the user.\n- `ApiError::BadRequest` if the IP list is empty, if one of the IPs is not\n  assigned to this instance, or if there are not enough free pools to swap\n  in replacements.",
+        "operationId": "replace_proxies",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceProxyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Proxies replaced"
+          },
+          "400": {
+            "description": "Invalid IPs or no replacement capacity"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Proxy instance not found"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Replace a user-elected list of proxy IPs with newly-allocated ones.",
+        "tags": [
+          "Proxies"
+        ]
+      }
+    },
+    "/v1/service/proxy/{instance_id}/replacements": {
+      "get": {
+        "description": "# Errors\n\nReturns an error when instance ownership cannot be verified or history\ncannot be queried.",
+        "operationId": "get_ip_replacement_history",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IpReplacementHistoryResponse"
+                }
+              }
+            },
+            "description": "Replacement history and cooldown"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Proxy instance not found"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Customer-visible replacement history and authoritative cooldown.",
+        "tags": [
+          "Proxies"
+        ]
+      }
+    },
+    "/v1/service/proxy/{instance_id}/stats": {
+      "get": {
+        "description": "# Errors\n\nReturns `ApiError` if the proxy service returns an error.",
+        "operationId": "get_stats",
+        "parameters": [
+          {
+            "description": "Instance ID",
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_UsageRecord"
+                }
+              }
+            },
+            "description": "Usage Statistics"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Usage stats.",
+        "tags": [
+          "Proxies"
+        ]
+      }
+    },
+    "/v1/service/proxy/{instance_id}/usage-rollup": {
+      "get": {
+        "description": "# Errors\nReturns `ApiError` when ownership check or state-manager request fails.",
+        "operationId": "get_usage_rollup",
+        "parameters": [
+          {
+            "description": "Instance ID",
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "UTC graph bucket size. Defaults to day.",
+            "in": "query",
+            "name": "granularity",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/UsageGranularity"
+            }
+          },
+          {
+            "description": "Filter from date (ISO 8601).",
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter to date (ISO 8601).",
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageRollupResponse"
+                }
+              }
+            },
+            "description": "Usage rollups"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Server-side usage graph rollups for one owned proxy instance.",
+        "tags": [
+          "Proxies"
+        ]
+      }
+    },
+    "/v1/service/proxy/{instance_id}/whitelists": {
+      "get": {
+        "description": "# Errors\n\nReturns `ApiError` if the database query fails.",
+        "operationId": "get_whitelist",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WhitelistEntry"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Current Whitelist"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Get whitelist.",
+        "tags": [
+          "Proxies"
+        ]
+      },
+      "post": {
+        "description": "# Errors\n\nReturns `ApiError` if the database query fails or input is invalid.",
+        "operationId": "add_whitelist",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIpsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WhitelistEntry"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Updated Whitelist"
+          },
+          "400": {
+            "description": "Invalid IP"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Add IPs to whitelist.",
+        "tags": [
+          "Proxies"
+        ]
+      }
+    },
+    "/v1/service/proxy/{instance_id}/whitelists/{ip}": {
+      "delete": {
+        "description": "# Errors\n\nReturns `ApiError` if the database query fails.",
+        "operationId": "remove_whitelist_ip",
+        "parameters": [
+          {
+            "description": "Instance ID",
+            "in": "path",
+            "name": "instance_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "IP Address",
+            "in": "path",
+            "name": "ip",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "IP Removed"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "summary": "Remove specific IP from whitelist.",
+        "tags": [
+          "Proxies"
+        ]
+      }
+    }
+  },
+  "security": [
+    {
+      "api_key": []
+    }
+  ],
+  "servers": [
+    {
+      "description": "HypeProxies API",
+      "url": "https://app.hypeproxies.com/api"
+    }
+  ]
+}

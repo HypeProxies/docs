@@ -1,0 +1,64 @@
+---
+import ArrowRight from '@lucide/astro/icons/arrow-right';
+import ChevronRight from '@lucide/astro/icons/chevron-right';
+import FileText from '@lucide/astro/icons/file-text';
+import type { GetStaticPaths } from 'astro';
+import ServiceIcon from '../../components/ServiceIcon.astro';
+import Base from '../../layouts/Base.astro';
+import { guideUrl, links, servicesWithGuides, type ServiceWithGuides } from '../../lib/site';
+
+export const getStaticPaths = (async () =>
+  (await servicesWithGuides()).map((entry) => ({ params: { service: entry.service.id }, props: entry }))) satisfies GetStaticPaths;
+
+const { service, guides } = Astro.props as ServiceWithGuides;
+---
+
+<Base title={service.data.title} description={service.data.description} crumbs={[{ label: 'Docs', href: '/' }, { label: service.data.title }]}>
+  <ServiceIcon slot="icon" icon={service.data.icon} />
+
+  <header class="max-w-[720px]">
+    <h1 class="text-3xl font-bold tracking-display leading-snug">{service.data.title}</h1>
+    <p class="mt-8 text-md text-text-2">{service.data.description}</p>
+  </header>
+
+  {
+    guides.length > 0 ? (
+      <div class="tray mt-40 max-w-[880px]">
+        <ul class="card flex flex-col p-8" aria-label="Guides">
+          {guides.map((guide) => (
+            <li>
+              <a class="row-link" href={guideUrl(guide)}>
+                <span class="icon-tile">
+                  <FileText size={16} stroke-width={1.75} aria-hidden="true" />
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="block text-md font-semibold text-text-1">{guide.data.title}</span>
+                  <span class="mt-2 block text-base text-text-2">{guide.data.description}</span>
+                </span>
+                <ChevronRight size={16} class="shrink-0 text-icon" aria-hidden="true" />
+              </a>
+            </li>
+          ))}
+        </ul>
+        <div class="tray-footer">
+          <span>Can't find what you need? Our team can help.</span>
+          <a class="inline-flex items-center gap-6 font-medium text-text-1" href={links.ticket}>
+            Open a ticket <ArrowRight size={14} aria-hidden="true" />
+          </a>
+        </div>
+      </div>
+    ) : (
+      <section class="card mt-40 max-w-[880px] p-24" aria-labelledby="soon-title">
+        <span class="chip">Coming soon</span>
+        <h2 id="soon-title" class="mt-14 text-xl font-semibold tracking-xl">Guides for {service.data.title} are on the way</h2>
+        <p class="mt-6 text-base text-text-2">
+          Until they are published, our support team can help you set up and use this service. You can also browse the{' '}
+          <a class="text-link" href={links.helpCenter}>Help Center</a>.
+        </p>
+        <a class="btn btn-primary mt-20" href={links.ticket}>
+          Open a ticket <ArrowRight size={14} aria-hidden="true" />
+        </a>
+      </section>
+    )
+  }
+</Base>

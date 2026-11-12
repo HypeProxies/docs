@@ -1,0 +1,279 @@
+---
+import Braces from '@lucide/astro/icons/braces';
+import Search from '@lucide/astro/icons/search';
+import X from '@lucide/astro/icons/x';
+import wordmark from '../assets/wordmark.svg?raw';
+import { guideUrl, RESELLER_API_PATH, serviceUrl, type ServiceWithGuides } from '../lib/site';
+import ServiceIcon from './ServiceIcon.astro';
+
+interface Props {
+  services: ServiceWithGuides[];
+  currentPath: string;
+}
+
+const { services, currentPath } = Astro.props;
+const current = (href: string) => (href === currentPath ? 'page' : undefined);
+---
+
+<aside id="sidebar" class="sidebar" aria-label="Docs navigation">
+  <div class="flex h-(--header-h) shrink-0 items-center justify-between gap-8 border-b border-stroke px-16">
+    <a href="/" class="brand flex items-center gap-10 rounded-control" aria-label="HypeProxies Docs home">
+      <img src="/assets/img/logo-mark.png" width="28" height="28" alt="" class="rounded-item" />
+      <span class="wordmark" set:html={wordmark} />
+      <span class="chip">Docs</span>
+    </a>
+    <button type="button" class="icon-btn lg:hidden" data-nav-close aria-label="Close menu">
+      <X size={16} aria-hidden="true" />
+    </button>
+  </div>
+
+  <div class="search relative px-16 pt-16" role="search">
+    <label class="search-box">
+      <Search size={15} class="shrink-0 text-icon" aria-hidden="true" />
+      <span class="sr-only">Search the docs</span>
+      <input
+        id="search-input"
+        type="search"
+        placeholder="Search"
+        autocomplete="off"
+        spellcheck="false"
+        role="combobox"
+        aria-controls="search-results"
+        aria-expanded="false"
+        aria-autocomplete="list"
+      />
+      <kbd class="search-key" aria-hidden="true">/</kbd>
+    </label>
+    <div id="search-results" class="search-results card" role="listbox" aria-label="Search results" hidden></div>
+  </div>
+
+  <nav class="flex-1 overflow-y-auto px-8 pt-16 pb-24" aria-label="Guides">
+    <p class="nav-label">Guides</p>
+    <ul class="flex flex-col gap-2">
+      {
+        services.map(({ service, guides }) => (
+          <li>
+            <a href={serviceUrl(service)} class="nav-link" aria-current={current(serviceUrl(service))}>
+              <ServiceIcon icon={service.data.icon} />
+              <span class="min-w-0 flex-1 truncate">{service.data.title}</span>
+              {guides.length === 0 && <span class="chip">Soon</span>}
+            </a>
+            {guides.length > 0 && (
+              <ul class="nav-sub">
+                {guides.map((guide) => (
+                  <li>
+                    <a href={guideUrl(guide)} class="nav-link nav-link-sub" aria-current={current(guideUrl(guide))}>
+                      {guide.data.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="nav-label mt-24">Developers</p>
+    <ul>
+      <li>
+        <a href={RESELLER_API_PATH} class="nav-link" aria-current={current(RESELLER_API_PATH)}>
+          <Braces size={16} stroke-width={1.75} aria-hidden="true" />
+          <span class="min-w-0 flex-1 truncate">Reseller API</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+</aside>
+
+<style>
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    width: var(--sidebar-w);
+    max-width: calc(100vw - var(--c6-space-48));
+    border-right: var(--c6-stroke-hairline) solid var(--c6-stroke);
+    background: var(--c6-bg);
+  }
+  @media (max-width: 1023.98px) {
+    .sidebar {
+      visibility: hidden;
+      transform: translateX(-100%);
+      box-shadow: 0 var(--c6-shadow-window-y) var(--c6-shadow-window-blur) 0 var(--c6-shadow-window);
+      transition: transform var(--c6-motion-base) var(--c6-ease-out),
+        visibility 0s linear var(--c6-motion-base);
+    }
+    :global(body.nav-open) .sidebar {
+      visibility: visible;
+      transform: none;
+      transition: transform var(--c6-motion-base) var(--c6-ease-out);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sidebar {
+        transform: none;
+        opacity: 0;
+        transition: opacity var(--c6-motion-fast) linear, visibility 0s linear var(--c6-motion-fast) !important;
+      }
+      :global(body.nav-open) .sidebar {
+        opacity: 1;
+        transition: opacity var(--c6-motion-fast) linear !important;
+      }
+    }
+  }
+
+  .wordmark {
+    display: block;
+    width: 104px;
+    color: var(--c6-text-1);
+  }
+  .wordmark :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: var(--c6-space-8);
+    height: 34px;
+    padding: 0 var(--c6-space-8) 0 var(--c6-space-10);
+    border: var(--c6-stroke-hairline) solid var(--c6-control-line);
+    border-radius: var(--c6-radius-field);
+    background: var(--c6-card);
+    cursor: text;
+    transition: border-color var(--c6-motion-fast) var(--c6-ease-out);
+  }
+  .search-box:hover {
+    border-color: var(--c6-control-line-hover);
+  }
+  .search-box:focus-within {
+    outline: 2px solid var(--c6-focus);
+    outline-offset: 2px;
+  }
+  .search-box input {
+    min-width: 0;
+    flex: 1;
+    border: 0;
+    background: transparent;
+    color: var(--c6-text-1);
+    font-size: var(--c6-text-base);
+    outline: none;
+  }
+  .search-box input::placeholder {
+    color: var(--c6-placeholder);
+  }
+  .search-box input::-webkit-search-cancel-button {
+    display: none;
+  }
+  .search-key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    border: var(--c6-stroke-hairline) solid var(--c6-stroke);
+    border-radius: var(--c6-radius-swatch);
+    color: var(--c6-text-3);
+    font-size: var(--c6-text-xs);
+  }
+
+  .search-results {
+    position: absolute;
+    top: calc(100% + var(--c6-space-6));
+    left: var(--c6-space-16);
+    z-index: 50;
+    width: min(400px, calc(100vw - var(--c6-space-32)));
+    max-height: min(480px, 70vh);
+    overflow-y: auto;
+    padding: var(--c6-space-6);
+    box-shadow: 0 var(--c6-shadow-window-y) var(--c6-shadow-window-blur) 0 var(--c6-shadow-window);
+  }
+
+  .nav-label {
+    padding: 0 var(--c6-space-8) var(--c6-space-8);
+    color: var(--c6-text-3);
+    font-size: var(--c6-text-xs);
+    font-weight: var(--c6-weight-medium);
+  }
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--c6-space-10);
+    min-height: 34px;
+    padding: var(--c6-space-6) var(--c6-space-8);
+    border-radius: var(--c6-radius-control);
+    color: var(--c6-text-2);
+    font-size: var(--c6-text-base);
+    font-weight: var(--c6-weight-medium);
+    line-height: var(--c6-leading-row);
+    transition: background-color var(--c6-motion-fast) var(--c6-ease-out),
+      color var(--c6-motion-fast) var(--c6-ease-out);
+  }
+  .nav-link :global(svg) {
+    flex: none;
+    color: var(--c6-icon);
+  }
+  .nav-link:hover {
+    background: var(--c6-hover);
+    color: var(--c6-text-1);
+  }
+  .nav-link[aria-current='page'] {
+    background: var(--c6-hover);
+    color: var(--c6-text-1);
+    font-weight: var(--c6-weight-semibold);
+  }
+  .nav-link[aria-current='page'] :global(svg) {
+    color: var(--c6-text-1);
+  }
+  .nav-sub {
+    display: flex;
+    flex-direction: column;
+    gap: var(--c6-space-2);
+    margin: var(--c6-space-2) 0 var(--c6-space-6) var(--c6-space-16);
+    padding-left: var(--c6-space-10);
+    border-left: var(--c6-stroke-hairline) solid var(--c6-stroke);
+  }
+  .nav-link-sub {
+    min-height: 30px;
+    font-weight: var(--c6-weight-regular);
+  }
+
+  .search-results :global(.search-result) {
+    display: grid;
+    gap: var(--c6-space-2);
+    padding: var(--c6-space-8) var(--c6-space-10);
+    border-radius: var(--c6-radius-control);
+    font-size: var(--c6-text-sm);
+    line-height: var(--c6-leading-row);
+  }
+  .search-results :global(.search-result:hover),
+  .search-results :global(.search-result.is-selected) {
+    background: var(--c6-hover);
+  }
+  .search-results :global(.search-result-title) {
+    color: var(--c6-text-1);
+    font-size: var(--c6-text-base);
+    font-weight: var(--c6-weight-semibold);
+  }
+  .search-results :global(.search-result-meta) {
+    color: var(--c6-text-3);
+    font-size: var(--c6-text-xs);
+  }
+  .search-results :global(.search-result-snippet) {
+    color: var(--c6-text-2);
+  }
+  .search-results :global(mark) {
+    border-radius: var(--c6-radius-hairline);
+    background: var(--c6-pressed);
+    color: var(--c6-text-1);
+  }
+  .search-results :global(.search-empty) {
+    padding: var(--c6-space-10);
+    color: var(--c6-text-2);
+    font-size: var(--c6-text-sm);
+  }
+</style>

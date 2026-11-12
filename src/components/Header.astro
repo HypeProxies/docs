@@ -1,0 +1,33 @@
+---
+import Menu from '@lucide/astro/icons/menu';
+import { links } from '../lib/site';
+import Breadcrumb, { type Crumb } from './Breadcrumb.astro';
+import ThemeToggle from './ThemeToggle.astro';
+
+interface Props {
+  crumbs: Crumb[];
+}
+
+const { crumbs } = Astro.props;
+---
+
+<header class="site-header sticky top-0 z-30 flex h-(--header-h) items-center gap-12 border-b border-stroke bg-bg px-16 sm:px-24">
+  <button
+    type="button"
+    class="icon-btn -ml-6 lg:hidden"
+    data-nav-toggle
+    aria-controls="sidebar"
+    aria-expanded="false"
+    aria-label="Open menu"
+  >
+    <Menu size={18} aria-hidden="true" />
+  </button>
+  <div class="min-w-0 flex-1">
+    <Breadcrumb crumbs={crumbs}><slot name="icon" slot="icon" /></Breadcrumb>
+  </div>
+  <div class="flex shrink-0 items-center gap-8">
+    <ThemeToggle />
+    <a class="btn btn-secondary max-sm:hidden" href={links.ticket}>Open a ticket</a>
+    <a class="btn btn-primary" href={links.login}>Login</a>
+  </div>
+</header>

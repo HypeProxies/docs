@@ -1,0 +1,109 @@
+/*
+ * Scalar's theme variables, mapped to c6 tokens. The c6 tokens already follow the site theme, so
+ * one block serves both of Scalar's modes (.light-mode and .dark-mode). The `html` prefix outranks
+ * Scalar's own `.light-mode` / `.dark-mode` defaults.
+ * Only loaded by the Reseller API page.
+ */
+html :is(.light-mode, .dark-mode) {
+  --scalar-custom-header-height: var(--header-h);
+
+  --scalar-font: var(--c6-font-ui);
+  --scalar-font-code: var(--c6-font-mono);
+
+  --scalar-heading-1: var(--c6-text-3xl);
+  --scalar-page-description: var(--c6-text-md);
+  --scalar-heading-2: var(--c6-text-xl);
+  --scalar-heading-3: var(--c6-text-lg);
+  --scalar-heading-4: var(--c6-text-md);
+  --scalar-heading-5: var(--c6-text-md);
+  --scalar-heading-6: var(--c6-text-md);
+  --scalar-paragraph: var(--c6-text-md);
+  --scalar-small: var(--c6-text-base);
+  --scalar-mini: var(--c6-text-sm);
+  --scalar-micro: var(--c6-text-xs);
+  --scalar-font-size-1: var(--c6-text-xl);
+  --scalar-font-size-2: var(--c6-text-lg);
+  --scalar-font-size-3: var(--c6-text-base);
+  --scalar-font-size-4: var(--c6-text-sm);
+  --scalar-font-size-5: var(--c6-text-xs);
+  --scalar-font-size-6: var(--c6-text-xs);
+  --scalar-font-size-7: var(--c6-text-2xs);
+
+  --scalar-regular: var(--c6-weight-regular);
+  --scalar-semibold: var(--c6-weight-medium);
+  --scalar-bold: var(--c6-weight-semibold);
+  --scalar-font-normal: var(--c6-weight-regular);
+  --scalar-font-medium: var(--c6-weight-medium);
+  --scalar-font-bold: var(--c6-weight-semibold);
+
+  --scalar-border-width: var(--c6-stroke-hairline);
+  --scalar-radius: var(--c6-radius-swatch);
+  --scalar-radius-md: var(--c6-radius-bar);
+  --scalar-radius-lg: var(--c6-radius-control);
+  --scalar-radius-xl: var(--c6-radius-row);
+  --scalar-radius-2xl: var(--c6-radius-card);
+  --scalar-radius-3xl: var(--c6-radius-tray);
+
+  --scalar-background-1: var(--c6-bg);
+  --scalar-background-2: var(--c6-tray);
+  --scalar-background-3: var(--c6-hover);
+  --scalar-background-card: var(--c6-card);
+  --scalar-background-accent: var(--c6-hover);
+  --scalar-border-color: var(--c6-stroke);
+
+  --scalar-color-1: var(--c6-text-1);
+  --scalar-color-2: var(--c6-text-2);
+  --scalar-color-3: var(--c6-text-3);
+  --scalar-color-accent: var(--c6-text-1);
+  --scalar-focus-color: var(--c6-focus);
+  --scalar-link-color: var(--c6-text-1);
+  --scalar-link-color-hover: var(--c6-text-1);
+
+  /* Color only for state: HTTP methods that change or delete get the state colors, the rest stay neutral. */
+  --scalar-color-green: var(--c6-success);
+  --scalar-color-red: var(--c6-danger);
+  --scalar-color-orange: var(--c6-warning);
+  --scalar-color-yellow: var(--c6-warning);
+  --scalar-color-blue: var(--c6-text-2);
+  --scalar-color-purple: var(--c6-text-2);
+  --scalar-color-query: var(--c6-text-2);
+  --scalar-color-alert: var(--c6-warning);
+  --scalar-color-danger: var(--c6-danger);
+  --scalar-background-alert: var(--c6-warning-soft);
+  --scalar-background-danger: var(--c6-danger-soft);
+
+  --scalar-button-1: var(--c6-primary);
+  --scalar-button-1-hover: var(--c6-primary-hover);
+  --scalar-button-1-color: var(--c6-primary-on);
+  --scalar-tooltip-background: var(--c6-primary);
+  --scalar-tooltip-color: var(--c6-primary-on);
+  --scalar-scrollbar-color: var(--c6-stroke);
+  --scalar-scrollbar-color-active: var(--c6-control-line);
+
+  --scalar-shadow-1: 0 var(--c6-shadow-tray-y) var(--c6-shadow-tray-blur) 0 var(--c6-shadow-tray);
+  --scalar-shadow-2: 0 var(--c6-shadow-card-y) var(--c6-shadow-card-blur) 0 var(--c6-shadow-card);
+}
+
+html :is(.light-mode, .dark-mode) .t-doc__sidebar {
+  --scalar-sidebar-background-1: var(--c6-bg);
+  --scalar-sidebar-color-1: var(--c6-text-1);
+  --scalar-sidebar-color-2: var(--c6-text-2);
+  --scalar-sidebar-border-color: var(--c6-stroke);
+  --scalar-sidebar-item-hover-background: var(--c6-hover);
+  --scalar-sidebar-item-hover-color: var(--c6-text-1);
+  --scalar-sidebar-item-active-background: var(--c6-hover);
+  --scalar-sidebar-color-active: var(--c6-text-1);
+  --scalar-sidebar-search-background: var(--c6-card);
+  --scalar-sidebar-search-color: var(--c6-placeholder);
+  --scalar-sidebar-search-border-color: var(--c6-control-line);
+}
+
+html :is(.light-mode, .dark-mode) .scalar-app :focus-visible {
+  outline: 2px solid var(--c6-focus);
+  outline-offset: 2px;
+}
+
+/* Long URLs in inline code wrap instead of being cut off on a phone. */
+html .scalar-app :not(pre) > code {
+  overflow-wrap: anywhere;
+}

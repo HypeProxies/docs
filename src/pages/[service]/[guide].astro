@@ -1,0 +1,165 @@
+---
+import ChevronDown from '@lucide/astro/icons/chevron-down';
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import HelpCard from '../../components/HelpCard.astro';
+import ServiceIcon from '../../components/ServiceIcon.astro';
+import Base from '../../layouts/Base.astro';
+import { formatDate, guideUrl, serviceUrl, servicesWithGuides, type Guide, type Service } from '../../lib/site';
+
+export const getStaticPaths = (async () =>
+  (await servicesWithGuides()).flatMap(({ service, guides }) =>
+    guides.map((guide) => ({
+      params: { service: service.id, guide: guide.id.split('/')[1] },
+      props: { service, guide, related: guides.filter((g) => g.id !== guide.id) },
+    })),
+  )) satisfies GetStaticPaths;
+
+interface Props {
+  service: Service;
+  guide: Guide;
+  related: Guide[];
+}
+
+const { service, guide, related } = Astro.props;
+const { Content, headings } = await render(guide);
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const updated = guide.data.last_updated;
+---
+
+<Base
+  title={guide.data.title}
+  description={guide.data.description}
+  crumbs={[{ label: 'Docs', href: '/' }, { label: service.data.title, href: serviceUrl(service) }, { label: guide.data.title }]}
+>
+  <ServiceIcon slot="icon" icon={service.data.icon} />
+
+  <div class="guide-grid">
+    <article class="min-w-0">
+      <header>
+        <h1 class="text-3xl font-bold tracking-display leading-snug">{guide.data.title}</h1>
+        <p class="mt-8 text-md text-text-2">{guide.data.description}</p>
+        <p class="mt-12 text-sm text-text-3">
+          Updated <time datetime={updated.toISOString().slice(0, 10)}>{formatDate(updated)}</time>
+        </p>
+      </header>
+
+      {
+        toc.length >= 2 && (
+          <details class="toc-inline card mt-24 xl:hidden">
+            <summary class="flex cursor-pointer items-center justify-between gap-8 px-16 py-12 text-base font-semibold">
+              On this page <ChevronDown size={16} class="toc-chevron text-icon" aria-hidden="true" />
+            </summary>
+            <ul class="toc-list border-t border-stroke px-8 py-8">
+              {toc.map((h) => (
+                <li class:list={[h.depth === 3 && 'pl-14']}>
+                  <a href={`#${h.slug}`}>{h.text}</a>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )
+      }
+
+      <div class="prose mt-32 border-t border-stroke pt-8">
+        <Content />
+      </div>
+
+      {
+        related.length > 0 && (
+          <section class="mt-48" aria-labelledby="related-title">
+            <h2 id="related-title" class="mb-14 text-md font-semibold">
+              More {service.data.title} guides
+            </h2>
+            <ul class="card flex flex-col p-8">
+              {related.slice(0, 4).map((g) => (
+                <li>
+                  <a class="row-link" href={guideUrl(g)}>
+                    <span class="min-w-0 flex-1">
+                      <span class="block text-md font-semibold">{g.data.title}</span>
+                      <span class="mt-2 block text-base text-text-2">{g.data.description}</span>
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      }
+
+      <HelpCard />
+    </article>
+
+    {
+      toc.length >= 2 && (
+        <aside class="toc max-xl:hidden" aria-labelledby="toc-title">
+          <p id="toc-title" class="px-10 pb-8 text-xs font-medium text-text-3">
+            On this page
+          </p>
+          <ul class="toc-list" data-toc>
+            {toc.map((h) => (
+              <li class:list={[h.depth === 3 && 'pl-12']}>
+                <a href={`#${h.slug}`}>{h.text}</a>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .guide-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 760px);
+    gap: var(--c6-space-56);
+  }
+  @media (min-width: 1280px) {
+    .guide-grid {
+      grid-template-columns: minmax(0, 760px) 220px;
+    }
+  }
+  .toc {
+    position: sticky;
+    top: calc(var(--header-h) + var(--c6-space-40));
+    align-self: start;
+    max-height: calc(100vh - var(--header-h) - var(--c6-space-64));
+    overflow-y: auto;
+  }
+  .toc-list a {
+    display: block;
+    padding: var(--c6-space-4) var(--c6-space-10);
+    border-radius: var(--c6-radius-item);
+    color: var(--c6-text-2);
+    font-size: var(--c6-text-sm);
+    line-height: var(--c6-leading-row);
+    transition: background-color var(--c6-motion-fast) var(--c6-ease-out),
+      color var(--c6-motion-fast) var(--c6-ease-out);
+  }
+  .toc-list a:hover {
+    background: var(--c6-hover);
+    color: var(--c6-text-1);
+  }
+  .toc-list :global(a.is-active) {
+    color: var(--c6-text-1);
+    font-weight: var(--c6-weight-semibold);
+  }
+  .toc-inline summary {
+    list-style: none;
+  }
+  .toc-inline summary::-webkit-details-marker {
+    display: none;
+  }
+  .toc-inline[open] .toc-chevron {
+    transform: rotate(180deg);
+  }
+  .toc-inline .toc-list a {
+    font-size: var(--c6-text-base);
+    padding: var(--c6-space-6) var(--c6-space-10);
+  }
+</style>
+
+<script>
+  import './../../scripts/guide';
+</script>
