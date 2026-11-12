@@ -117,3 +117,12 @@ html .scalar-app :is(pre, code) {
   --scalar-color-blue: var(--c6-text-1);
   --scalar-color-purple: var(--c6-text-1);
 }
+
+/* The API key placeholder in code samples is not a secret: show "ApiKey YOUR_API_KEY" instead of dots. */
+html .scalar-app .credential .credential-value {
+  font-size: inherit;
+  color: inherit;
+}
+html .scalar-app .credential::after {
+  content: none;
+}

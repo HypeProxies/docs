@@ -292,10 +292,10 @@
         "type": "object"
       },
       "IpReplacementHistoryEntry": {
-        "description": "Durable history entry for one IP replacement attempt.",
+        "description": "One IP replacement attempt.",
         "properties": {
           "actor_kind": {
-            "description": "Whether customer or admin initiated attempt.",
+            "description": "Who asked for it: `customer` (the workspace) or `admin` (our staff).",
             "type": "string"
           },
           "added_ips": {
@@ -306,7 +306,7 @@
             "type": "array"
           },
           "completed_at": {
-            "description": "Completion timestamp used for cooldown calculations.",
+            "description": "When the attempt finished. The cooldown counts from the latest successful attempt.",
             "format": "date-time",
             "type": "string"
           },
@@ -350,7 +350,7 @@
         "type": "object"
       },
       "IpReplacementHistoryResponse": {
-        "description": "Replacement history plus server-authoritative cooldown state.",
+        "description": "The latest IP replacements and the cooldown before the next one.",
         "properties": {
           "cooldown_remaining_seconds": {
             "description": "Seconds until another successful replacement may be attempted.",
@@ -534,7 +534,7 @@
                   "type": "string"
                 },
                 "sync_pending": {
-                  "description": "Set while the proxy engine is still being brought up to date.",
+                  "description": "True while a change to this sub-user is still reaching our proxy servers.",
                   "type": "boolean"
                 },
                 "updated_at": {
@@ -923,7 +923,7 @@
         "type": "object"
       },
       "ProxyInstanceResponse": {
-        "description": "Enhanced Proxy Instance Response with resolved IPs and Plan Details.",
+        "description": "A proxy service with its proxy login, IPs and plan details.",
         "properties": {
           "addons": {
             "description": "List of active addons.",
@@ -943,7 +943,7 @@
             "description": "Configuration snapshot."
           },
           "connection_status": {
-            "description": "Live connection status derived from the hosting node's health check:\n`online` (node healthy), `degraded` (one health probe failing),\n`offline` (node unreachable), or `unknown` (no node assigned / not yet\nprobed). This reflects infrastructure reachability, independent of the\naccount-level `status` above.",
+            "description": "Whether the proxy server hosting the service is reachable: `online`, `degraded` (one\nhealth check failing), `offline`, or `unknown` (not checked yet, or no server assigned).\nIndependent of the service's `status` above.",
             "type": "string"
           },
           "created_at": {
@@ -952,7 +952,7 @@
             "type": "string"
           },
           "external_id": {
-            "description": "Engine-side state-manager user ID, when provisioning reached the engine.",
+            "description": "ID of the proxy login on our proxy servers; empty until the service is first set up.",
             "format": "uuid",
             "type": [
               "string",
@@ -973,7 +973,7 @@
             ]
           },
           "proxy_password": {
-            "description": "Password for proxy authentication.\n\n**Critical:** This field contains the plaintext password decrypted from the database.\nThe user must see this to configure their proxy clients.",
+            "description": "Password for proxy authentication, as the proxies expect it. Keep it secret.",
             "type": "string"
           },
           "proxy_username": {
@@ -998,14 +998,14 @@
             "type": "string"
           },
           "sync_error": {
-            "description": "Last engine sync error, when a retry is pending.",
+            "description": "Why the last update of our proxy servers failed, while a retry is pending.",
             "type": [
               "string",
               "null"
             ]
           },
           "sync_status": {
-            "description": "Engine sync state for this instance: provisioning, retrying, failed, or synced.",
+            "description": "Whether our proxy servers have this service's latest settings: `provisioning`,\n`retrying`, `failed` or `synced`.",
             "type": "string"
           }
         },
@@ -1070,7 +1070,7 @@
             "type": "string"
           },
           "pool": {
-            "description": "The ID or name of the pool this IP belongs to.",
+            "description": "The name of the IP range this IP comes from.",
             "type": [
               "string",
               "null"
@@ -1094,7 +1094,7 @@
             "type": "string"
           },
           "was_replaced": {
-            "description": "True when this IP was issued through a recent replacement request.\nUsed by the UI to surface newly-rotated IPs in the proxy list.",
+            "description": "True when this IP came in through a recent IP replacement.",
             "type": "boolean"
           }
         },
@@ -1118,7 +1118,7 @@
             "type": "array"
           },
           "reason": {
-            "description": "Customer or admin supplied reason stored in replacement history.",
+            "description": "Why the IPs are replaced, 1 to 500 characters; shown in the replacement history.",
             "type": "string"
           }
         },
@@ -1535,7 +1535,7 @@
             ]
           },
           "ready": {
-            "description": "Whether the service is active and its proxies are provisioned. Right after provisioning,\nthe engine may still be receiving the IPs through a queued retry.",
+            "description": "Whether the service is active and its proxies are provisioned. Right after provisioning,\nour proxy servers may still be receiving its IPs for a short while.",
             "type": "boolean"
           },
           "reference": {
@@ -1682,7 +1682,7 @@
             "type": "string"
           },
           "sync_pending": {
-            "description": "Set while the proxy engine is still being brought up to date.",
+            "description": "True while a change to this sub-user is still reaching our proxy servers.",
             "type": "boolean"
           },
           "updated_at": {
@@ -1914,7 +1914,7 @@
         "type": "object"
       },
       "UsageGranularity": {
-        "description": "Server-side aggregation interval for usage graphs.",
+        "description": "The size of each usage graph bucket.",
         "enum": [
           "hour",
           "day"
@@ -1922,7 +1922,7 @@
         "type": "string"
       },
       "UsageRollupBucket": {
-        "description": "One server-computed usage graph bucket.",
+        "description": "Usage within one graph bucket.",
         "properties": {
           "abuse_connections": {
             "format": "int64",
@@ -2029,7 +2029,7 @@
         "type": "object"
       },
       "UsageRollupResponse": {
-        "description": "State-manager response powering dashboard totals and graphs.",
+        "description": "Usage over a selected period: totals, graph buckets, and usage per proxy IP and per\nclient IP.",
         "properties": {
           "buckets": {
             "items": {
@@ -2065,7 +2065,7 @@
         "type": "object"
       },
       "UsageRollupTotals": {
-        "description": "Selected-period totals computed by state manager from same rollup query.",
+        "description": "Usage totals for the whole selected period.",
         "properties": {
           "abuse_connections": {
             "format": "int64",
@@ -2442,7 +2442,7 @@
             "type": "string"
           },
           "id": {
-            "description": "Unique identifier for the whitelist row.",
+            "description": "Unique identifier for the whitelist entry.",
             "format": "uuid",
             "type": "string"
           }
@@ -2457,15 +2457,11 @@
     },
     "securitySchemes": {
       "api_key": {
-        "description": "Send `Authorization: ApiKey <key>`.",
+        "description": "Send your API key in the `Authorization` header, after `ApiKey` and a space: `Authorization: ApiKey <key>`. Create keys in the dashboard under API keys.",
         "in": "header",
         "name": "Authorization",
-        "type": "apiKey"
-      },
-      "bearer_auth": {
-        "bearerFormat": "JWT",
-        "scheme": "bearer",
-        "type": "http"
+        "type": "apiKey",
+        "x-scalar-secret-token": "ApiKey YOUR_API_KEY"
       }
     }
   },
@@ -2478,7 +2474,7 @@
   "paths": {
     "/v1/reseller": {
       "get": {
-        "description": "# Errors\nReturns a database error.",
+        "description": "The workspace's reseller application and its status; `profile` is `null` before\napplying.\n\n# Errors\nReturns `Unauthorized` without a valid API key.",
         "operationId": "status",
         "responses": {
           "200": {
@@ -2489,6 +2485,9 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Unauthorized"
           }
         },
         "security": [
@@ -2496,7 +2495,7 @@
             "api_key": []
           }
         ],
-        "summary": "The current workspace's reseller profile.",
+        "summary": "Get the reseller profile",
         "tags": [
           "Resellers"
         ]
@@ -2504,7 +2503,7 @@
     },
     "/v1/reseller/apply": {
       "post": {
-        "description": "# Errors\nReturns validation errors, `Forbidden` for plain members and `Conflict` if the\nworkspace already has an application that was not rejected.",
+        "description": "Apply to resell for the current workspace. The workspace owner then verifies their\nidentity (`POST /reseller/identity`), which activates the application; staff can also\ndecide it themselves.\n\n# Errors\nReturns validation errors, `Forbidden` for plain members and `Conflict` if the\nworkspace already has an application that was not rejected.",
         "operationId": "apply",
         "requestBody": {
           "content": {
@@ -2533,7 +2532,7 @@
             "api_key": []
           }
         ],
-        "summary": "Apply to resell for the current workspace. The workspace owner then verifies their\nidentity (`POST /reseller/identity`), which activates the application; staff can also\ndecide it themselves.",
+        "summary": "Apply to resell",
         "tags": [
           "Resellers"
         ]
@@ -2541,7 +2540,7 @@
     },
     "/v1/reseller/identity": {
       "post": {
-        "description": "# Errors\n`Forbidden` for anyone but the workspace owner, `NotFound` before applying, `Conflict` when\nthere is nothing to verify, `ServiceUnavailable` when Stripe cannot be reached.",
+        "description": "Start or resume the workspace owner's identity verification (ID document and matching\nselfie, through Stripe Identity). Open the returned URL right away: it works once.\n\n# Errors\n`Forbidden` for anyone but the workspace owner, `NotFound` before applying, `Conflict` when\nthere is nothing to verify, `ServiceUnavailable` when Stripe cannot be reached.",
         "operationId": "start",
         "responses": {
           "200": {
@@ -2563,7 +2562,7 @@
             "api_key": []
           }
         ],
-        "summary": "Start or resume the workspace owner's identity verification (ID document and matching\nselfie, through Stripe Identity). Open the returned URL right away: it works once.",
+        "summary": "Verify the owner's identity",
         "tags": [
           "Resellers"
         ]
@@ -2571,7 +2570,7 @@
     },
     "/v1/reseller/inventory": {
       "get": {
-        "description": "# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
+        "description": "What can be bought right now: whole /24s and plan IPs per carrier, in all and at\neach of the carrier's physical sites. Approved resellers only.\n\n# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
         "operationId": "inventory",
         "responses": {
           "200": {
@@ -2590,7 +2589,7 @@
             "api_key": []
           }
         ],
-        "summary": "What can be bought right now: whole /24s and plan IPs per carrier, in all and at\neach of the carrier's physical sites. Approved resellers only.",
+        "summary": "Check stock",
         "tags": [
           "Resellers"
         ]
@@ -2598,7 +2597,7 @@
     },
     "/v1/reseller/onboarding": {
       "get": {
-        "description": "# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
+        "description": "Which get-started steps are done: a funded wallet, an API key, a first order, a customer\n(a labelled service or a sub-user) and a webhook endpoint. Approved resellers only.\n\n# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
         "operationId": "checklist",
         "responses": {
           "200": {
@@ -2617,28 +2616,7 @@
             "api_key": []
           }
         ],
-        "summary": "Which get-started steps are done: a funded wallet, an API key, a first order, a customer\n(a labelled service or a sub-user) and a webhook endpoint. Approved resellers only.",
-        "tags": [
-          "Resellers"
-        ]
-      }
-    },
-    "/v1/reseller/openapi.json": {
-      "get": {
-        "description": "# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
-        "operationId": "spec",
-        "responses": {
-          "200": {
-            "description": "OpenAPI 3 document"
-          },
-          "403": {}
-        },
-        "security": [
-          {
-            "api_key": []
-          }
-        ],
-        "summary": "The reseller API as an `OpenAPI` document. Approved resellers only.",
+        "summary": "Get the get-started checklist",
         "tags": [
           "Resellers"
         ]
@@ -2646,7 +2624,7 @@
     },
     "/v1/reseller/orders": {
       "post": {
-        "description": "# Errors\nReturns `BadRequest` for a missing key, bad order, or unknown carrier or site, `Forbidden`\nunless an owner or admin of an approved reseller, and `Conflict` when prices are\nnot set, stock or the wallet is short, or the key was used for another order.",
+        "description": "Buy dedicated /24s or a pay-as-you-go plan from the workspace wallet, at the\nreseller price list. Send a fresh `Idempotency-Key` (UUID) per order: a retry\nwith the same key returns the first answer and never charges twice.\n\n# Errors\nReturns `BadRequest` for a missing key, bad order, or unknown carrier or site, `Forbidden`\nunless an owner or admin of an approved reseller, and `Conflict` when prices are\nnot set, stock or the wallet is short, or the key was used for another order.",
         "operationId": "order",
         "parameters": [
           {
@@ -2697,7 +2675,7 @@
             "api_key": []
           }
         ],
-        "summary": "Buy dedicated /24s or a pay-as-you-go plan from the workspace wallet, at the\nreseller price list. Send a fresh `Idempotency-Key` (UUID) per order: a retry\nwith the same key returns the first answer and never charges twice.",
+        "summary": "Place an order",
         "tags": [
           "Resellers"
         ]
@@ -2705,7 +2683,7 @@
     },
     "/v1/reseller/packs": {
       "post": {
-        "description": "Send a fresh `Idempotency-Key` (UUID) per pack: a retry with the same key returns the same\npack (`200`) and never charges or creates twice.\n\n# Errors\nReturns `BadRequest` for a missing key, a bad pack, or an unknown carrier or site,\n`Forbidden` unless an owner or admin of an approved reseller, `Conflict` when the key was\nused for another pack, a whitelisted client IP is already in use in the workspace, prices\nare not set or stock or the wallet is short, and `ServiceUnavailable` when the proxy engine\ndid not take the sub-user. Nothing is charged or created on an error.",
+        "description": "A customer's sub-user of `ips` IPs that no other sub-user serves. It is carved at once from\nspare IPs of one of the workspace's working /24s or plans that match the carrier, site and\nuse case (`201`, with the sub-user and its password). When none has room, the smallest\npay-as-you-go plan that fits is bought from the wallet (`202`, `pending`); the sub-user is\ncreated as soon as the plan is provisioned, `pack.ready` is sent, and this pack shows it.\nA plan bought for a pack stays and renews; its spare IPs serve later packs.\n\nSend a fresh `Idempotency-Key` (UUID) per pack: a retry with the same key returns the same\npack (`200`) and never charges or creates twice.\n\n# Errors\nReturns `BadRequest` for a missing key, a bad pack, or an unknown carrier or site,\n`Forbidden` unless an owner or admin of an approved reseller, `Conflict` when the key was\nused for another pack, a whitelisted client IP is already in use in the workspace, prices\nare not set or stock or the wallet is short, and `ServiceUnavailable` when our proxy\nservers did not take the sub-user. Nothing is charged or created on an error.",
         "operationId": "create",
         "parameters": [
           {
@@ -2766,7 +2744,7 @@
             "api_key": []
           }
         ],
-        "summary": "A customer's sub-user of `ips` IPs that no other sub-user serves. It is carved at once from\nspare IPs of one of the workspace's working /24s or plans that match the carrier, site and\nuse case (`201`, with the sub-user and its password). When none has room, the smallest\npay-as-you-go plan that fits is bought from the wallet (`202`, `pending`); the sub-user is\ncreated as soon as the plan is provisioned, `pack.ready` is sent, and this pack shows it.\nA plan bought for a pack stays and renews; its spare IPs serve later packs.",
+        "summary": "Create a pack",
         "tags": [
           "Resellers"
         ]
@@ -2774,7 +2752,7 @@
     },
     "/v1/reseller/packs/{pack_id}": {
       "get": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for a\npack that is not the workspace's.",
+        "description": "One of the workspace's packs, with its sub-user and password once ready.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for a\npack that is not the workspace's.",
         "operationId": "get",
         "parameters": [
           {
@@ -2805,7 +2783,7 @@
             "api_key": []
           }
         ],
-        "summary": "One of the workspace's packs, with its sub-user and password once ready.",
+        "summary": "Get a pack",
         "tags": [
           "Resellers"
         ]
@@ -2813,7 +2791,7 @@
     },
     "/v1/reseller/prices": {
       "get": {
-        "description": "# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
+        "description": "The reseller price list. Approved resellers only.\n\n# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
         "operationId": "prices",
         "responses": {
           "200": {
@@ -2832,7 +2810,7 @@
             "api_key": []
           }
         ],
-        "summary": "The reseller price list. Approved resellers only.",
+        "summary": "Get the price list",
         "tags": [
           "Resellers"
         ]
@@ -2840,7 +2818,7 @@
     },
     "/v1/reseller/services": {
       "get": {
-        "description": "# Errors\nReturns `BadRequest` for a blank `reference`, and `Forbidden` unless the workspace is an\napproved reseller.",
+        "description": "The workspace's reseller services, each delivered to one customer. Approved resellers only.\n\n# Errors\nReturns `BadRequest` for a blank `reference`, and `Forbidden` unless the workspace is an\napproved reseller.",
         "operationId": "list",
         "parameters": [
           {
@@ -2874,7 +2852,7 @@
             "api_key": []
           }
         ],
-        "summary": "The workspace's reseller services, each delivered to one customer. Approved resellers only.",
+        "summary": "List services",
         "tags": [
           "Resellers"
         ]
@@ -2882,7 +2860,7 @@
     },
     "/v1/reseller/services/{service_id}": {
       "patch": {
-        "description": "# Errors\nReturns `BadRequest` for a label or reference over 200 characters or with a NUL, `Forbidden` unless an\nowner or admin of an approved reseller, and `NotFound` for a service that is not one of\nthe workspace's reseller services.",
+        "description": "Name a reseller service for the customer it is delivered to, with the reseller's own\nreference. A field left out stays as it is; a blank one is cleared.\n\n# Errors\nReturns `BadRequest` for a label or reference over 200 characters or with a NUL, `Forbidden` unless an\nowner or admin of an approved reseller, and `NotFound` for a service that is not one of\nthe workspace's reseller services.",
         "operationId": "label",
         "parameters": [
           {
@@ -2924,7 +2902,7 @@
             "api_key": []
           }
         ],
-        "summary": "Name a reseller service for the customer it is delivered to, with the reseller's own\nreference. A field left out stays as it is; a blank one is cleared.",
+        "summary": "Label a service",
         "tags": [
           "Resellers"
         ]
@@ -2932,7 +2910,7 @@
     },
     "/v1/reseller/services/{service_id}/subusers": {
       "get": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for a\nservice that is not one of the workspace's reseller services.",
+        "description": "A reseller service's sub-users, oldest first, without their passwords.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for a\nservice that is not one of the workspace's reseller services.",
         "operationId": "list",
         "parameters": [
           {
@@ -2989,13 +2967,13 @@
             "api_key": []
           }
         ],
-        "summary": "A reseller service's sub-users, oldest first, without their passwords.",
+        "summary": "List sub-users",
         "tags": [
           "Resellers"
         ]
       },
       "post": {
-        "description": "# Errors\nReturns `BadRequest` for a bad label, IP or whitelist; `Forbidden` unless an owner or admin\nof an approved reseller; `NotFound` for a service that is not one of the workspace's\nreseller services; `Conflict` when the service is not active or provisioned, is ending,\nhas 254 sub-users, or a whitelisted client IP is already in use in the workspace; and\n`ServiceUnavailable` when the proxy engine did not take it.",
+        "description": "A new proxy login on some of a reseller service's IPs, returned with its password. Give\neither `ips` (some of the service's IPs) or `ip_count` (that many of the IPs the fewest\nsub-users serve).\n\n# Errors\nReturns `BadRequest` for a bad label, IP or whitelist; `Forbidden` unless an owner or admin\nof an approved reseller; `NotFound` for a service that is not one of the workspace's\nreseller services; `Conflict` when the service is not active or provisioned, is ending,\nhas 254 sub-users, or a whitelisted client IP is already in use in the workspace; and\n`ServiceUnavailable` when our proxy servers did not take it.",
         "operationId": "create",
         "parameters": [
           {
@@ -3039,7 +3017,7 @@
             "api_key": []
           }
         ],
-        "summary": "A new proxy login on some of a reseller service's IPs, returned with its password. Give\neither `ips` (some of the service's IPs) or `ip_count` (that many of the IPs the fewest\nsub-users serve).",
+        "summary": "Create a sub-user",
         "tags": [
           "Resellers"
         ]
@@ -3047,7 +3025,7 @@
     },
     "/v1/reseller/services/{service_id}/subusers/{subuser_id}": {
       "delete": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, `NotFound` for a\nsub-user that is not one of this workspace service's (including one already deleted), and\n`ServiceUnavailable` when the proxy engine did not delete it, which leaves it as it was.",
+        "description": "Its proxy login stops working before the call returns.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, `NotFound` for a\nsub-user that is not one of this workspace service's (including one already deleted), and\n`ServiceUnavailable` when our proxy servers did not delete it, which leaves it as it was.",
         "operationId": "delete",
         "parameters": [
           {
@@ -3080,13 +3058,13 @@
             "api_key": []
           }
         ],
-        "summary": "Delete a sub-user: its engine user, then its rows.",
+        "summary": "Delete a sub-user",
         "tags": [
           "Resellers"
         ]
       },
       "get": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for a\nsub-user that is not one of this workspace service's.",
+        "description": "One sub-user, with its password.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for a\nsub-user that is not one of this workspace service's.",
         "operationId": "get",
         "parameters": [
           {
@@ -3126,13 +3104,13 @@
             "api_key": []
           }
         ],
-        "summary": "One sub-user, with its password.",
+        "summary": "Get a sub-user",
         "tags": [
           "Resellers"
         ]
       },
       "patch": {
-        "description": "# Errors\nReturns `BadRequest` for a blank label or text over 200 characters or with a NUL,\n`Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for a\nsub-user that is not one of this workspace service's.",
+        "description": "Change a sub-user's label or reference. A field left out stays as it is; a `null` or\nblank reference is cleared.\n\n# Errors\nReturns `BadRequest` for a blank label or text over 200 characters or with a NUL,\n`Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for a\nsub-user that is not one of this workspace service's.",
         "operationId": "rename",
         "parameters": [
           {
@@ -3183,7 +3161,7 @@
             "api_key": []
           }
         ],
-        "summary": "Rename a sub-user. A field left out stays as it is; a `null` or blank reference is cleared.",
+        "summary": "Rename a sub-user",
         "tags": [
           "Resellers"
         ]
@@ -3191,7 +3169,7 @@
     },
     "/v1/reseller/services/{service_id}/subusers/{subuser_id}/ips": {
       "put": {
-        "description": "# Errors\nReturns `BadRequest` for an empty list or an IP the service does not hold, `Forbidden`\nunless an owner or admin of an approved reseller, `NotFound` for a sub-user that is not one\nof this workspace service's, `Conflict` when the service is not active, and\n`ServiceUnavailable` when the proxy engine did not take the list, which leaves the old one.",
+        "description": "Set the IPs a sub-user serves, all of them the service's.\n\n# Errors\nReturns `BadRequest` for an empty list or an IP the service does not hold, `Forbidden`\nunless an owner or admin of an approved reseller, `NotFound` for a sub-user that is not one\nof this workspace service's, `Conflict` when the service is not active, and\n`ServiceUnavailable` when our proxy servers did not take the list, which leaves the old one.",
         "operationId": "set_ips",
         "parameters": [
           {
@@ -3244,7 +3222,7 @@
             "api_key": []
           }
         ],
-        "summary": "Set the IPs a sub-user serves, all of them the service's.",
+        "summary": "Set a sub-user's IPs",
         "tags": [
           "Resellers"
         ]
@@ -3252,7 +3230,7 @@
     },
     "/v1/reseller/services/{service_id}/subusers/{subuser_id}/resume": {
       "post": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, `NotFound` for a\nsub-user that is not one of this workspace service's, and `ServiceUnavailable` when the\nproxy engine did not take it.",
+        "description": "Resume a paused sub-user. Its proxies work again once its service is active too.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, `NotFound` for a\nsub-user that is not one of this workspace service's, and `ServiceUnavailable` when our\nproxy servers did not take it.",
         "operationId": "resume",
         "parameters": [
           {
@@ -3293,7 +3271,7 @@
             "api_key": []
           }
         ],
-        "summary": "Resume a paused sub-user. Its proxies work again once its service is active too.",
+        "summary": "Resume a sub-user",
         "tags": [
           "Resellers"
         ]
@@ -3301,7 +3279,7 @@
     },
     "/v1/reseller/services/{service_id}/subusers/{subuser_id}/rotate-password": {
       "post": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, `NotFound` for a\nsub-user that is not one of this workspace service's, and `ServiceUnavailable` when the\nproxy engine did not take it, which keeps the old password.",
+        "description": "Give a sub-user a new random password, returned with it. The old one stops working.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, `NotFound` for a\nsub-user that is not one of this workspace service's, and `ServiceUnavailable` when our\nproxy servers did not take it, which keeps the old password.",
         "operationId": "rotate_password",
         "parameters": [
           {
@@ -3342,7 +3320,7 @@
             "api_key": []
           }
         ],
-        "summary": "Give a sub-user a new random password, returned with it. The old one stops working.",
+        "summary": "Rotate a sub-user's password",
         "tags": [
           "Resellers"
         ]
@@ -3350,7 +3328,7 @@
     },
     "/v1/reseller/services/{service_id}/subusers/{subuser_id}/suspend": {
       "post": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, `NotFound` for a\nsub-user that is not one of this workspace service's, and `ServiceUnavailable` when the\nproxy engine did not take it.",
+        "description": "Pause a sub-user: its proxies stop working until it is resumed.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, `NotFound` for a\nsub-user that is not one of this workspace service's, and `ServiceUnavailable` when our\nproxy servers did not take it.",
         "operationId": "suspend",
         "parameters": [
           {
@@ -3391,7 +3369,7 @@
             "api_key": []
           }
         ],
-        "summary": "Pause a sub-user: its proxies stop working until it is resumed.",
+        "summary": "Suspend a sub-user",
         "tags": [
           "Resellers"
         ]
@@ -3399,7 +3377,7 @@
     },
     "/v1/reseller/services/{service_id}/subusers/{subuser_id}/whitelists": {
       "put": {
-        "description": "# Errors\nReturns `BadRequest` for an address that is not IPv4 or more than 100, `Forbidden` unless\nan owner or admin of an approved reseller, `NotFound` for a sub-user that is not one of\nthis workspace service's, `Conflict` when the workspace's own login or another sub-user\nalready uses one, and `ServiceUnavailable` when the proxy engine did not take the list.",
+        "description": "Set the client IPs a sub-user authenticates by; an empty list clears them.\n\n# Errors\nReturns `BadRequest` for an address that is not IPv4 or more than 100, `Forbidden` unless\nan owner or admin of an approved reseller, `NotFound` for a sub-user that is not one of\nthis workspace service's, `Conflict` when the workspace's own login or another sub-user\nalready uses one, and `ServiceUnavailable` when our proxy servers did not take the list.",
         "operationId": "set_whitelists",
         "parameters": [
           {
@@ -3452,7 +3430,7 @@
             "api_key": []
           }
         ],
-        "summary": "Set the client IPs a sub-user authenticates by; an empty list clears them.",
+        "summary": "Set a sub-user's whitelist",
         "tags": [
           "Resellers"
         ]
@@ -3460,7 +3438,7 @@
     },
     "/v1/reseller/wallet": {
       "get": {
-        "description": "# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
+        "description": "The wallet that orders and renewals are paid from: its balance and the reseller services\nthat renew from it next. Approved resellers only.\n\n# Errors\nReturns `Forbidden` unless the workspace is an approved reseller.",
         "operationId": "wallet",
         "responses": {
           "200": {
@@ -3479,7 +3457,7 @@
             "api_key": []
           }
         ],
-        "summary": "The wallet that orders and renewals are paid from: its balance and the reseller services\nthat renew from it next. Approved resellers only.",
+        "summary": "Get the wallet",
         "tags": [
           "Resellers"
         ]
@@ -3487,7 +3465,7 @@
     },
     "/v1/reseller/webhooks": {
       "get": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller.",
+        "description": "The workspace's webhook endpoints, oldest first. Secrets are never listed.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller.",
         "operationId": "list",
         "responses": {
           "200": {
@@ -3509,13 +3487,13 @@
             "api_key": []
           }
         ],
-        "summary": "The workspace's webhook endpoints, oldest first. Secrets are never listed.",
+        "summary": "List webhook endpoints",
         "tags": [
           "Resellers"
         ]
       },
       "post": {
-        "description": "# Errors\nReturns `BadRequest` for a URL that is not HTTPS, carries credentials, or does not resolve\nto a public address, an unknown event type or a long description; `Forbidden` unless an\nowner or admin of an approved reseller; and `Conflict` at 10 endpoints.",
+        "description": "Register an HTTPS endpoint for the workspace's events. The answer carries its signing\nsecret, which is never shown again.\n\n# Errors\nReturns `BadRequest` for a URL that is not HTTPS, carries credentials, or does not resolve\nto a public address, an unknown event type or a long description; `Forbidden` unless an\nowner or admin of an approved reseller; and `Conflict` at 10 endpoints.",
         "operationId": "create",
         "requestBody": {
           "content": {
@@ -3546,7 +3524,7 @@
             "api_key": []
           }
         ],
-        "summary": "Register an HTTPS endpoint for the workspace's events. The answer carries its signing\nsecret, which is never shown again.",
+        "summary": "Create a webhook endpoint",
         "tags": [
           "Resellers"
         ]
@@ -3554,7 +3532,7 @@
     },
     "/v1/reseller/webhooks/{endpoint_id}": {
       "delete": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "description": "Delete an endpoint and its delivery log. Events not yet delivered to it are dropped.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
         "operationId": "delete",
         "parameters": [
           {
@@ -3577,13 +3555,13 @@
             "api_key": []
           }
         ],
-        "summary": "Delete an endpoint and its delivery log. Events not yet delivered to it are dropped.",
+        "summary": "Delete a webhook endpoint",
         "tags": [
           "Resellers"
         ]
       },
       "get": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "description": "One of the workspace's endpoints, without its secret.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
         "operationId": "get",
         "parameters": [
           {
@@ -3614,7 +3592,7 @@
             "api_key": []
           }
         ],
-        "summary": "One of the workspace's endpoints, without its secret.",
+        "summary": "Get a webhook endpoint",
         "tags": [
           "Resellers"
         ]
@@ -3622,7 +3600,7 @@
     },
     "/v1/reseller/webhooks/{endpoint_id}/deliveries": {
       "get": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "description": "The endpoint's deliveries, newest first: each event's status, attempts and last response.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
         "operationId": "deliveries",
         "parameters": [
           {
@@ -3679,7 +3657,7 @@
             "api_key": []
           }
         ],
-        "summary": "The endpoint's deliveries, newest first: each event's status, attempts and last response.",
+        "summary": "List deliveries",
         "tags": [
           "Resellers"
         ]
@@ -3687,7 +3665,7 @@
     },
     "/v1/reseller/webhooks/{endpoint_id}/disable": {
       "post": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "description": "Turn an endpoint off. It gets no new events until it is enabled again; events already\nwaiting for it are kept.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
         "operationId": "disable",
         "parameters": [
           {
@@ -3718,7 +3696,7 @@
             "api_key": []
           }
         ],
-        "summary": "Turn an endpoint off. It gets no new events until it is enabled again; events already\nwaiting for it are kept.",
+        "summary": "Disable a webhook endpoint",
         "tags": [
           "Resellers"
         ]
@@ -3726,7 +3704,7 @@
     },
     "/v1/reseller/webhooks/{endpoint_id}/enable": {
       "post": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "description": "Turn an endpoint on again, with its failures cleared. Events waiting for it, including\nthose that happened while it was disabled after failures, are sent again now, in order,\neach with a fresh day of retries.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
         "operationId": "enable",
         "parameters": [
           {
@@ -3757,7 +3735,7 @@
             "api_key": []
           }
         ],
-        "summary": "Turn an endpoint on again, with its failures cleared. Events waiting for it, including\nthose that happened while it was disabled after failures, are sent again now, in order,\neach with a fresh day of retries.",
+        "summary": "Enable a webhook endpoint",
         "tags": [
           "Resellers"
         ]
@@ -3765,7 +3743,7 @@
     },
     "/v1/reseller/webhooks/{endpoint_id}/rotate-secret": {
       "post": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "description": "Replace an endpoint's signing secret. Deliveries are signed with the new one from now on,\nretries included; the answer carries it, and it is never shown again.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
         "operationId": "rotate_secret",
         "parameters": [
           {
@@ -3796,7 +3774,7 @@
             "api_key": []
           }
         ],
-        "summary": "Replace an endpoint's signing secret. Deliveries are signed with the new one from now on,\nretries included; the answer carries it, and it is never shown again.",
+        "summary": "Rotate a signing secret",
         "tags": [
           "Resellers"
         ]
@@ -3804,7 +3782,7 @@
     },
     "/v1/reseller/webhooks/{endpoint_id}/test": {
       "post": {
-        "description": "# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
+        "description": "Send a `webhook.test` event to the endpoint now, enabled or not, and return how it went.\nIt is tried once and does not count towards disabling the endpoint.\n\n# Errors\nReturns `Forbidden` unless an owner or admin of an approved reseller, and `NotFound` for\nan endpoint that is not the workspace's.",
         "operationId": "test",
         "parameters": [
           {
@@ -3835,7 +3813,7 @@
             "api_key": []
           }
         ],
-        "summary": "Send a `webhook.test` event to the endpoint now, enabled or not, and return how it went.\nIt is tried once and does not count towards disabling the endpoint.",
+        "summary": "Send a test event",
         "tags": [
           "Resellers"
         ]
@@ -3843,7 +3821,7 @@
     },
     "/v1/service/proxy": {
       "get": {
-        "description": "# Errors\n\nReturns `ApiError` if the database query fails.",
+        "description": "The workspace's proxy services, each with its proxy login, IPs and status.\n\n# Errors\n\nReturns `Unauthorized` without a valid API key.",
         "operationId": "list_instances",
         "responses": {
           "200": {
@@ -3868,7 +3846,7 @@
             "api_key": []
           }
         ],
-        "summary": "List user bought proxy service instances.",
+        "summary": "List proxy services",
         "tags": [
           "Proxies"
         ]
@@ -3876,7 +3854,7 @@
     },
     "/v1/service/proxy/{instance_id}/": {
       "get": {
-        "description": "# Errors\n\nReturns `ApiError` if the database query fails.",
+        "description": "One proxy service, with its proxy login, IPs, status and renewal date.\n\n# Errors\n\nReturns `NotFound` for a proxy service that is not the workspace's.",
         "operationId": "get_instance",
         "parameters": [
           {
@@ -3912,7 +3890,7 @@
             "api_key": []
           }
         ],
-        "summary": "Detailed service instance information.",
+        "summary": "Get a proxy service",
         "tags": [
           "Proxies"
         ]
@@ -3920,7 +3898,7 @@
     },
     "/v1/service/proxy/{instance_id}/credentials": {
       "put": {
-        "description": "# Errors\n\nReturns `ApiError` if the database or remote proxy service fails.",
+        "description": "Sets a new password for the proxy service's login. The old password stops working.\n\n# Errors\n\nReturns `BadRequest` for an invalid password, `NotFound` for a proxy service that is not\nthe workspace's or is not set up yet, and `Conflict` while another password change for it\nis in progress. An error from our proxy servers comes back with its own status, usually a\n5xx.",
         "operationId": "update_credentials",
         "parameters": [
           {
@@ -3958,6 +3936,9 @@
           },
           "409": {
             "description": "Another password change for this proxy is in progress"
+          },
+          "502": {
+            "description": "Proxy servers unreachable or failed"
           }
         },
         "security": [
@@ -3965,7 +3946,7 @@
             "api_key": []
           }
         ],
-        "summary": "Proxy auth update.",
+        "summary": "Change the proxy password",
         "tags": [
           "Proxies"
         ]
@@ -3973,7 +3954,7 @@
     },
     "/v1/service/proxy/{instance_id}/domains": {
       "get": {
-        "description": "Scoped to THIS service's instance (not the customer's whole account) and\nkeyed by the engine-side `external_id`, which is what the state manager\nstores domain stats under.\n\n# Errors\n\nReturns `ApiError::NotFound` if the instance doesn't belong to the caller,\nor `ApiError` if the state manager is unreachable.",
+        "description": "The domains this proxy service's traffic went to most, with their requests and bytes.\nOnly this service's traffic counts, not the rest of the workspace's. `limit` sets how many\n(20 by default, at most 200).\n\n# Errors\n\nReturns `NotFound` for a proxy service that is not the workspace's or is not set up yet,\nand `BadRequest` when its domain stats cannot be read right now.",
         "operationId": "get_domains",
         "parameters": [
           {
@@ -4009,6 +3990,9 @@
             },
             "description": "Top domains"
           },
+          "400": {
+            "description": "Domain stats unavailable"
+          },
           "401": {
             "description": "Unauthorized"
           },
@@ -4021,7 +4005,7 @@
             "api_key": []
           }
         ],
-        "summary": "Top requested domains for a single proxy instance.",
+        "summary": "List top domains",
         "tags": [
           "Proxies"
         ]
@@ -4029,7 +4013,7 @@
     },
     "/v1/service/proxy/{instance_id}/list": {
       "get": {
-        "description": "# Errors\n\nReturns `ApiError` if the database query fails.",
+        "description": "Every proxy of the proxy service: its IP, port, username and password, with the IP's ISP,\nlocation and type.\n\n# Errors\n\nReturns `NotFound` for a proxy service that is not the workspace's.",
         "operationId": "get_list",
         "parameters": [
           {
@@ -4055,6 +4039,9 @@
           },
           "401": {
             "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
           }
         },
         "security": [
@@ -4062,7 +4049,7 @@
             "api_key": []
           }
         ],
-        "summary": "Get detailed proxy list.",
+        "summary": "List proxies",
         "tags": [
           "Proxies"
         ]
@@ -4070,7 +4057,7 @@
     },
     "/v1/service/proxy/{instance_id}/replace": {
       "post": {
-        "description": "Each IP supplied must currently belong to the caller's proxy instance.\nThe corresponding pools are released and freshly-available pools matching\nthe same tags / family are allocated in their place. The full updated IP\nlist is synced to the proxy engine before returning.\n\n# Errors\n\nReturns:\n- `ApiError::NotFound` if the instance does not belong to the user.\n- `ApiError::BadRequest` if the IP list is empty, if one of the IPs is not\n  assigned to this instance, or if there are not enough free pools to swap\n  in replacements.",
+        "description": "Swaps some of the proxy service's IPs for new ones of the same kind. Each IP sent must\nbe one of the service's. The new IPs work as soon as the call returns.\n\n# Errors\n\nReturns:\n- `NotFound` for a proxy service that is not the workspace's or is not set up yet.\n- `BadRequest` for an empty list, an IP that is not the service's, a `reason` that is\n  empty or over 500 characters, or when there are not enough free IPs to replace them with.\n- `TooManyRequests` while the cooldown after the last replacement runs.\n- `Conflict` when the service's IPs changed or were resynced during the replacement,\n  which replaces nothing.\n- `ServiceUnavailable` when our proxy servers did not confirm the new IPs in time. Any\n  other error from our proxy servers comes back with its own status, usually a 5xx.",
         "operationId": "replace_proxies",
         "parameters": [
           {
@@ -4105,6 +4092,18 @@
           },
           "404": {
             "description": "Proxy instance not found"
+          },
+          "409": {
+            "description": "The service's IPs changed or were resynced during the replacement"
+          },
+          "429": {
+            "description": "Replacement cooldown running"
+          },
+          "502": {
+            "description": "Proxy servers unreachable or failed"
+          },
+          "503": {
+            "description": "Proxy servers did not confirm in time"
           }
         },
         "security": [
@@ -4112,7 +4111,7 @@
             "api_key": []
           }
         ],
-        "summary": "Replace a user-elected list of proxy IPs with newly-allocated ones.",
+        "summary": "Replace IPs",
         "tags": [
           "Proxies"
         ]
@@ -4120,7 +4119,7 @@
     },
     "/v1/service/proxy/{instance_id}/replacements": {
       "get": {
-        "description": "# Errors\n\nReturns an error when instance ownership cannot be verified or history\ncannot be queried.",
+        "description": "The proxy service's latest IP replacements, newest first, and how long until another\nreplacement is allowed.\n\n# Errors\n\nReturns `NotFound` for a proxy service that is not the workspace's or is not set up yet.",
         "operationId": "get_ip_replacement_history",
         "parameters": [
           {
@@ -4156,7 +4155,7 @@
             "api_key": []
           }
         ],
-        "summary": "Customer-visible replacement history and authoritative cooldown.",
+        "summary": "List IP replacements",
         "tags": [
           "Proxies"
         ]
@@ -4164,7 +4163,7 @@
     },
     "/v1/service/proxy/{instance_id}/stats": {
       "get": {
-        "description": "# Errors\n\nReturns `ApiError` if the proxy service returns an error.",
+        "description": "The proxy service's usage records, a page at a time, optionally between `from` and `to`.\n\n# Errors\n\nReturns `NotFound` for a proxy service that is not the workspace's or is not set up yet.\nAn error from our proxy servers comes back with its own status, usually a 5xx.",
         "operationId": "get_stats",
         "parameters": [
           {
@@ -4227,6 +4226,9 @@
           },
           "404": {
             "description": "Not Found"
+          },
+          "502": {
+            "description": "Proxy servers unreachable or failed"
           }
         },
         "security": [
@@ -4234,7 +4236,7 @@
             "api_key": []
           }
         ],
-        "summary": "Usage stats.",
+        "summary": "List usage records",
         "tags": [
           "Proxies"
         ]
@@ -4242,7 +4244,7 @@
     },
     "/v1/service/proxy/{instance_id}/usage-rollup": {
       "get": {
-        "description": "# Errors\nReturns `ApiError` when ownership check or state-manager request fails.",
+        "description": "The proxy service's usage over a period: totals, and graph buckets by hour or day.\n\n# Errors\nReturns `NotFound` for a proxy service that is not the workspace's or is not set up yet.\nAn error from our proxy servers comes back with its own status, usually a 5xx.",
         "operationId": "get_usage_rollup",
         "parameters": [
           {
@@ -4298,6 +4300,9 @@
           },
           "404": {
             "description": "Not Found"
+          },
+          "502": {
+            "description": "Proxy servers unreachable or failed"
           }
         },
         "security": [
@@ -4305,7 +4310,7 @@
             "api_key": []
           }
         ],
-        "summary": "Server-side usage graph rollups for one owned proxy instance.",
+        "summary": "Get usage totals",
         "tags": [
           "Proxies"
         ]
@@ -4313,7 +4318,7 @@
     },
     "/v1/service/proxy/{instance_id}/whitelists": {
       "get": {
-        "description": "# Errors\n\nReturns `ApiError` if the database query fails.",
+        "description": "The client IPs that may use the workspace's own proxy login without its password. One\nlist serves all of the workspace's proxy services.\n\n# Errors\n\nReturns `NotFound` for a proxy service that is not the workspace's or is not set up yet.",
         "operationId": "get_whitelist",
         "parameters": [
           {
@@ -4342,6 +4347,9 @@
           },
           "401": {
             "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
           }
         },
         "security": [
@@ -4349,13 +4357,13 @@
             "api_key": []
           }
         ],
-        "summary": "Get whitelist.",
+        "summary": "List whitelisted IPs",
         "tags": [
           "Proxies"
         ]
       },
       "post": {
-        "description": "# Errors\n\nReturns `ApiError` if the database query fails or input is invalid.",
+        "description": "Adds client IPv4 addresses to the workspace's whitelist and returns the whole list.\n\n# Errors\n\nReturns `BadRequest` for an address that is not IPv4, `NotFound` for a proxy service that\nis not the workspace's or is not set up yet, and `Conflict` when a sub-user is already\nwhitelisted by one. An error from our proxy servers comes back with its own status, usually\na 5xx.",
         "operationId": "add_whitelist",
         "parameters": [
           {
@@ -4397,6 +4405,15 @@
           },
           "401": {
             "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "A sub-user is whitelisted by the IP"
+          },
+          "502": {
+            "description": "Proxy servers unreachable or failed"
           }
         },
         "security": [
@@ -4404,7 +4421,7 @@
             "api_key": []
           }
         ],
-        "summary": "Add IPs to whitelist.",
+        "summary": "Whitelist IPs",
         "tags": [
           "Proxies"
         ]
@@ -4412,7 +4429,7 @@
     },
     "/v1/service/proxy/{instance_id}/whitelists/{ip}": {
       "delete": {
-        "description": "# Errors\n\nReturns `ApiError` if the database query fails.",
+        "description": "Takes one client IP off the workspace's whitelist.\n\n# Errors\n\nReturns `BadRequest` for an address that is not IPv4, and `NotFound` for a proxy service\nthat is not the workspace's or is not set up yet or an IP that is not on the whitelist.\nAn error from our proxy servers comes back with its own status, usually a 5xx.",
         "operationId": "remove_whitelist_ip",
         "parameters": [
           {
@@ -4438,11 +4455,17 @@
           "204": {
             "description": "IP Removed"
           },
+          "400": {
+            "description": "Invalid IP"
+          },
           "401": {
             "description": "Unauthorized"
           },
           "404": {
             "description": "Not Found"
+          },
+          "502": {
+            "description": "Proxy servers unreachable or failed"
           }
         },
         "security": [
@@ -4450,7 +4473,7 @@
             "api_key": []
           }
         ],
-        "summary": "Remove specific IP from whitelist.",
+        "summary": "Remove a whitelisted IP",
         "tags": [
           "Proxies"
         ]

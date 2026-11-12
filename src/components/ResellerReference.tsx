@@ -37,8 +37,7 @@ export default function ResellerReference() {
       forceDarkModeState: currentTheme(),
       documentDownloadType: 'json' as const,
       defaultOpenFirstTag: true,
-      // The spec's summaries are full sentences; the sidebar lists operations by path instead.
-      operationTitleSource: 'path' as const,
+      operationTitleSource: 'summary' as const,
       showDeveloperTools: 'never' as const,
       showToolbar: 'never' as const,
     }),
