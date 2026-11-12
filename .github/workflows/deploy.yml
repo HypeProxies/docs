@@ -1,5 +1,5 @@
-# Builds and checks the Astro site for every pull request and every push to main, and publishes
-# main to GitHub Pages (docs.hypeproxies.com). Needs Settings > Pages > Source set to "GitHub Actions".
+# Builds and checks the Astro site for every pull request, every push to main and every manual run,
+# and publishes main to GitHub Pages (docs.hypeproxies.com). Needs Settings > Pages > Source set to "GitHub Actions".
 name: Deploy docs
 
 on:

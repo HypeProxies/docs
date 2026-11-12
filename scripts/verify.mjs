@@ -6,6 +6,7 @@
 //
 // Needs Playwright's Chromium once: npx playwright install chromium
 import { spawn } from 'node:child_process';
+import { constants } from 'node:os';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -87,13 +88,14 @@ async function startPreview() {
   const server = spawn(join(ROOT, 'node_modules/.bin/astro'), ['preview', '--port', '4329', '--ignore-lock'], {
     cwd: ROOT,
     detached: true,
-    env: { ...process.env, ASTRO_TELEMETRY_DISABLED: '1' },
+    // No color codes, so the ready line can be read.
+    env: { ...process.env, ASTRO_TELEMETRY_DISABLED: '1', NO_COLOR: '1', FORCE_COLOR: '0' },
     stdio: ['ignore', 'pipe', 'inherit'],
   });
   for (const signal of ['SIGINT', 'SIGTERM']) {
     process.once(signal, () => {
       stop(server);
-      process.exit(130);
+      process.exit(128 + constants.signals[signal]);
     });
   }
   return new Promise((resolve, reject) => {
@@ -112,6 +114,8 @@ async function startPreview() {
       clearTimeout(timer);
       server.stdout.off('data', onData);
       server.stdout.resume(); // keep draining the server's output
+      server.removeAllListeners('exit');
+      server.on('exit', (code, signal) => signal !== 'SIGTERM' && console.error(`astro preview stopped early (${code}).`));
       resolve({ server, base: url });
     };
     server.stdout.on('data', onData);
@@ -150,9 +154,11 @@ await mkdir(OUT, { recursive: true });
 const offenders = await scanForRawColors();
 check('src uses c6 tokens only (no hex or Tailwind palette colors outside tokens.css)', offenders.length === 0, offenders.join('; '));
 
-const { server, base: BASE } = await startPreview();
+let server;
+let BASE;
 let browser;
 try {
+  ({ server, base: BASE } = await startPreview());
   browser = await chromium.launch();
   // Old URLs still answer.
   for (const path of LEGACY_PATHS) {
@@ -266,10 +272,10 @@ try {
   }
 } catch (error) {
   // A step that throws (a timeout, a crash) is a failed check; results.json is still written.
-  check('verify ran to the end', false, error.stack ?? error);
+  check('verify ran to the end', false, error?.stack ?? String(error));
 } finally {
   await browser?.close();
-  stop(server);
+  if (server) stop(server);
 }
 
 const failed = results.filter((r) => !r.ok);
