@@ -3,7 +3,7 @@
 #   id:          folder name of the service in guides/ (lowercase-with-hyphens); its page is /<id>/
 #   title:       name shown to customers
 #   description: one sentence, shown on the home page and the service page
-#   icon:        mac | server | cloud | globe
+#   icon:        mac | server | cloud | globe | activity
 #   order:       position on the site, lowest first
 #
 # Guides are picked up automatically from guides/<id>/. A service with no guides yet is shown as
@@ -32,3 +32,9 @@
   description: Dedicated ISP and residential proxies.
   icon: globe
   order: 4
+
+- id: monitoring
+  title: Advanced monitoring
+  description: An add-on where our support team watches your server's CPU, RAM, disk, availability and remote access, and spots problems before they affect you.
+  icon: activity
+  order: 5

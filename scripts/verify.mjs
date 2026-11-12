@@ -20,6 +20,7 @@ const PAGES = [
   { name: 'service', path: '/mac-mini/' },
   { name: 'guide', path: '/mac-mini/connecting.html' },
   { name: 'reseller-api', path: '/api/reseller/' },
+  { name: 'monitoring-guide', path: '/monitoring/windows-servers.html' },
 ];
 const MODES = [
   { name: 'light-desktop', viewport: { width: 1440, height: 900 }, colorScheme: 'light' },
