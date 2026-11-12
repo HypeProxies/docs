@@ -39,25 +39,38 @@ Windows Exporter is a small open-source service that reports the server's usage 
 
 ## Step 2: Allow our monitoring server through Windows Firewall
 
-Our monitoring server connects from **104.254.188.69**. These two rules let only that address reach the exporter and ping the server.
+Our monitoring server is **client-monitor.hypeproxies.com**. Windows Firewall rules take IP addresses, not names, so the first command looks up the server's address and the two rules use it. Run all three commands in the same PowerShell window.
 
-1. Allow the exporter (TCP port 9182):
+1. Look up the monitoring server's address:
+
+   ```powershell
+   $monitor = (Resolve-DnsName client-monitor.hypeproxies.com -Type A).IPAddress
+   $monitor
+   ```
+
+   You should see an IP address.
+
+2. Allow the exporter (TCP port 9182):
 
    ```powershell
    New-NetFirewallRule -DisplayName "HypeProxies Monitoring Exporter" `
      -Direction Inbound -Protocol TCP -LocalPort 9182 `
-     -RemoteAddress 104.254.188.69 -Action Allow
+     -RemoteAddress $monitor -Action Allow
    ```
 
-2. Allow ping (ICMP echo):
+3. Allow ping (ICMP echo):
 
    ```powershell
    New-NetFirewallRule -DisplayName "HypeProxies Monitoring ICMP" `
      -Direction Inbound -Protocol ICMPv4 -IcmpType 8 `
-     -RemoteAddress 104.254.188.69 -Action Allow
+     -RemoteAddress $monitor -Action Allow
    ```
 
-> **Note:** If your server also sits behind another firewall (a hardware firewall, or a firewall in a control panel), allow the same traffic there: TCP port 9182 and ICMP echo from 104.254.188.69.
+These rules let only our monitoring server reach the exporter and ping your server.
+
+> **Note:** The rules keep the address from when you created them. If we ever change the monitoring server's address, we'll tell you; delete the two rules (`Remove-NetFirewallRule -DisplayName "HypeProxies Monitoring*"`) and run the three commands again.
+
+> **Note:** If your server also sits behind another firewall (a hardware firewall, or a firewall in a control panel), allow the same traffic there: TCP port 9182 and ICMP echo from the address the first command showed.
 
 ## Step 3: Check that the exporter is running
 
@@ -93,6 +106,7 @@ Reply to your ticket, or [open a new one](https://dash.hypeproxies.com/submittic
 
 | Problem | What to do |
 |---|---|
+| `Resolve-DnsName` says the name does not exist | Check the spelling: `client-monitor.hypeproxies.com`. If it still fails, tell us in your ticket. |
 | `Get-Service windows_exporter` says it cannot find the service | The installer didn't finish. Run it again as administrator (Step 1). |
 | The service stops again after `Start-Service` | Restart the server, then check again. If it still stops, tell us in your ticket. |
 | `Invoke-WebRequest` doesn't return `200` | Check that the service is running and that you kept port 9182 during installation. |
