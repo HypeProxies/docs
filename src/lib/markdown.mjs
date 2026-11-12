@@ -1,8 +1,9 @@
 // Markdown conventions from CONTRIBUTING.md, as Sätteri HTML-tree plugins (Astro's Markdown processor).
 import { defineHastPlugin } from 'satteri';
 
-/** @param {any} node */
-const firstElement = (node) => node.children?.find((/** @type {any} */ child) => child.type === 'element');
+/** The first child that is not blank text. @param {any} node */
+const firstChild = (node) =>
+  node.children?.find((/** @type {any} */ child) => child.type !== 'text' || child.value.trim() !== '');
 
 /**
  * `> **Note:** ...` becomes a note box and `> **Warning:** ...` a warning box.
@@ -13,7 +14,9 @@ export const noteBoxes = defineHastPlugin({
   element: {
     filter: ['blockquote'],
     visit(node, ctx) {
-      const lead = firstElement(firstElement(node) ?? {});
+      const paragraph = firstChild(node);
+      if (paragraph?.tagName !== 'p') return;
+      const lead = firstChild(paragraph);
       if (lead?.tagName !== 'strong') return;
       const kind = { 'Note:': 'note', 'Warning:': 'warning' }[ctx.textContent(lead).trim()];
       if (!kind) return;

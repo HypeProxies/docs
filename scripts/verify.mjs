@@ -8,12 +8,11 @@
 import { spawn } from 'node:child_process';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
-const ROOT = new URL('..', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const OUT = join(ROOT, '.verify');
-const PORT = 4329;
-const BASE = `http://localhost:${PORT}`;
 
 const PAGES = [
   { name: 'home', path: '/' },
@@ -78,24 +77,40 @@ function stop(server) {
   }
 }
 
+/**
+ * Starts `astro preview` and resolves with its URL, read from the server's own ready line (it moves
+ * to another port when 4329 is taken). The server gets its own process group so stop() ends it
+ * all, also on Ctrl-C.
+ */
 async function startPreview() {
-  // Astro's preview keeps a lock file; --ignore-lock lets a run start even if an old server left one.
-  const server = spawn(join(ROOT, 'node_modules/.bin/astro'), ['preview', '--port', String(PORT), '--ignore-lock'], {
+  // Astro keeps a preview lock file; --ignore-lock lets a run start even if an old server left one.
+  const server = spawn(join(ROOT, 'node_modules/.bin/astro'), ['preview', '--port', '4329', '--ignore-lock'], {
     cwd: ROOT,
     detached: true,
     env: { ...process.env, ASTRO_TELEMETRY_DISABLED: '1' },
-    stdio: ['ignore', 'pipe', 'pipe'],
+    stdio: ['ignore', 'pipe', 'inherit'],
   });
-  for (let i = 0; i < 60; i++) {
-    try {
-      if ((await fetch(BASE)).ok) return server;
-    } catch {
-      // not up yet
-    }
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  stop(server);
-  throw new Error('astro preview did not start; run `npm run build` first');
+  process.once('SIGINT', () => {
+    stop(server);
+    process.exit(130);
+  });
+  return new Promise((resolve, reject) => {
+    let output = '';
+    const timer = setTimeout(() => {
+      stop(server);
+      reject(new Error(`astro preview did not start; run \`npm run build\` first.\n${output}`));
+    }, 30000);
+    server.stdout.on('data', (chunk) => {
+      output += chunk;
+      const url = output.match(/http:\/\/localhost:\d+/)?.[0];
+      if (url) {
+        clearTimeout(timer);
+        server.stdout.resume();
+        resolve({ server, base: url });
+      }
+    });
+    server.on('exit', (code) => reject(new Error(`astro preview exited (${code}).\n${output}`)));
+  });
 }
 
 /** Opens a page, fails the run on console errors and requests that leave localhost. */
@@ -128,7 +143,7 @@ await mkdir(OUT, { recursive: true });
 const offenders = await scanForRawColors();
 check('src uses c6 tokens only (no hex or Tailwind palette colors outside tokens.css)', offenders.length === 0, offenders.join('; '));
 
-const server = await startPreview();
+const { server, base: BASE } = await startPreview();
 const browser = await chromium.launch();
 try {
   // Old URLs still answer.
@@ -208,9 +223,9 @@ try {
       await page.waitForTimeout(400);
     }
     await page.fill('#search-input', 'webhooks');
-    await page.waitForTimeout(300);
-    const api = await page.locator('#search-results .search-result[href="/api/reseller/"]').count();
-    check(`search (${mode.name}): finds the reseller API reference`, api === 1);
+    const api = page.locator('#search-results .search-result[href="/api/reseller/"]');
+    const found = await api.waitFor({ timeout: 5000 }).then(() => true, () => false);
+    check(`search (${mode.name}): finds the reseller API reference`, found);
     page.finish();
     await context.close();
   }

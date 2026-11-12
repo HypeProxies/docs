@@ -23,8 +23,13 @@ if (prose && navigator.clipboard) {
     button.textContent = 'Copy';
     button.setAttribute('aria-label', 'Copy code');
     button.addEventListener('click', async () => {
-      await navigator.clipboard.writeText((pre.querySelector('code') ?? pre).innerText.replace(/\n$/, ''));
-      button.textContent = 'Copied';
+      try {
+        await navigator.clipboard.writeText((pre.querySelector('code') ?? pre).innerText.replace(/\n$/, ''));
+        button.textContent = 'Copied';
+      } catch {
+        // Clipboard blocked (permission, unfocused page): say so instead of failing silently.
+        button.textContent = 'Copy failed';
+      }
       setTimeout(() => (button.textContent = 'Copy'), 1600);
     });
     wrap.append(button);

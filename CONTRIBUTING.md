@@ -22,7 +22,7 @@ A guide at `guides/vps/connecting.md` is published at `https://docs.hypeproxies.
    ```yaml
    ---
    title: Connecting to your VPS        # page title, menu, cards, search
-   description: One or two sentences.   # shown under the title and on the cards
+   description: One or two sentences.   # plain text, shown under the title, on the cards and in search
    order: 1                             # position in the menu, lowest first
    last_updated: 2026-11-04             # change it every time the guide changes
    ---

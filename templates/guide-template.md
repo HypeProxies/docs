@@ -1,6 +1,6 @@
 ---
 title: <What the customer wants to do, for example "Connecting to your VPS">
-description: <One or two sentences: what this guide helps with and what the customer needs before starting. Shown under the title and on the cards.>
+description: <One or two sentences of plain text (no Markdown): what this guide helps with and what the customer needs before starting. Shown under the title, on the cards and in search.>
 order: 10
 last_updated: YYYY-MM-DD
 ---
