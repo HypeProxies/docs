@@ -22,6 +22,7 @@ if (prose && navigator.clipboard) {
     button.className = 'btn btn-secondary copy-btn';
     button.textContent = 'Copy';
     button.setAttribute('aria-label', 'Copy code');
+    let reset: ReturnType<typeof setTimeout> | undefined;
     button.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText((pre.querySelector('code') ?? pre).innerText.replace(/\n$/, ''));
@@ -30,7 +31,8 @@ if (prose && navigator.clipboard) {
         // Clipboard blocked (permission, unfocused page): say so instead of failing silently.
         button.textContent = 'Copy failed';
       }
-      setTimeout(() => (button.textContent = 'Copy'), 1600);
+      clearTimeout(reset);
+      reset = setTimeout(() => (button.textContent = 'Copy'), 1600);
     });
     wrap.append(button);
   }

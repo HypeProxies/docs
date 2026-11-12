@@ -90,26 +90,33 @@ async function startPreview() {
     env: { ...process.env, ASTRO_TELEMETRY_DISABLED: '1' },
     stdio: ['ignore', 'pipe', 'inherit'],
   });
-  process.once('SIGINT', () => {
-    stop(server);
-    process.exit(130);
-  });
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.once(signal, () => {
+      stop(server);
+      process.exit(130);
+    });
+  }
   return new Promise((resolve, reject) => {
     let output = '';
-    const timer = setTimeout(() => {
+    const fail = (message) => {
+      clearTimeout(timer);
       stop(server);
-      reject(new Error(`astro preview did not start; run \`npm run build\` first.\n${output}`));
-    }, 30000);
-    server.stdout.on('data', (chunk) => {
+      reject(new Error(`${message}\n${output}`));
+    };
+    const timer = setTimeout(() => fail('astro preview did not start; run `npm run build` first.'), 30000);
+    const onData = (chunk) => {
       output += chunk;
-      const url = output.match(/http:\/\/localhost:\d+/)?.[0];
-      if (url) {
-        clearTimeout(timer);
-        server.stdout.resume();
-        resolve({ server, base: url });
-      }
-    });
-    server.on('exit', (code) => reject(new Error(`astro preview exited (${code}).\n${output}`)));
+      // A complete URL only: the ready line can arrive split across chunks.
+      const url = output.match(/http:\/\/localhost:\d+(?=\/)/)?.[0];
+      if (!url) return;
+      clearTimeout(timer);
+      server.stdout.off('data', onData);
+      server.stdout.resume(); // keep draining the server's output
+      resolve({ server, base: url });
+    };
+    server.stdout.on('data', onData);
+    server.on('error', (error) => fail(`astro preview could not start (${error.message}); run \`npm ci\` first.`));
+    server.on('exit', (code) => fail(`astro preview exited (${code}).`));
   });
 }
 
@@ -144,8 +151,9 @@ const offenders = await scanForRawColors();
 check('src uses c6 tokens only (no hex or Tailwind palette colors outside tokens.css)', offenders.length === 0, offenders.join('; '));
 
 const { server, base: BASE } = await startPreview();
-const browser = await chromium.launch();
+let browser;
 try {
+  browser = await chromium.launch();
   // Old URLs still answer.
   for (const path of LEGACY_PATHS) {
     const response = await fetch(BASE + path);
@@ -224,8 +232,9 @@ try {
     }
     await page.fill('#search-input', 'webhooks');
     const api = page.locator('#search-results .search-result[href="/api/reseller/"]');
-    const found = await api.waitFor({ timeout: 5000 }).then(() => true, () => false);
-    check(`search (${mode.name}): finds the reseller API reference`, found);
+    await api.first().waitFor({ timeout: 5000 }).catch(() => {});
+    const count = await api.count();
+    check(`search (${mode.name}): finds the reseller API reference once`, count === 1, `${count} results`);
     page.finish();
     await context.close();
   }
@@ -255,8 +264,11 @@ try {
     const response = await fetch(`${BASE}/no-such-page`);
     check('unknown URL returns the 404 page', response.status === 404 && (await response.text()).includes('Page not found'), response.status);
   }
+} catch (error) {
+  // A step that throws (a timeout, a crash) is a failed check; results.json is still written.
+  check('verify ran to the end', false, error.stack ?? error);
 } finally {
-  await browser.close();
+  await browser?.close();
   stop(server);
 }
 
